@@ -17,3 +17,21 @@ export const generateRegNo = async () => {
     );
     return `REG${String(counter.sequenceValue).padStart(4, "0")}`;
 };
+
+export const generateCityCode = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { _id: "cityCode" },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+    );
+    return `CTY${String(counter.sequenceValue).padStart(4, "0")}`;
+};
+
+export const generateAreaCode = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { _id: "areaCode" },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+    );
+    return `ARE${String(counter.sequenceValue).padStart(4, "0")}`;
+};
