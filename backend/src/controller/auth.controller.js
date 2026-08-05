@@ -7,6 +7,8 @@ import {ApiResponse} from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { generateEmployeeId, generateRegNo } from "../utils/counterUtils.js";
+import {generateAndSaveOTP} from "../utils/otpUtils.js";
+import sendOTPEmail from "../utils/sendOtpEmail.js";
 
 
 
@@ -33,21 +35,92 @@ const generateAccessAndRefreshTokens = async(userId) => {
 }
 
 
-// Verification Initiation Controller - 
-// Take email from user
-// verify if user exists
-// If not exists - throw error
-// Generate random string (OTP)
-// Save OTP to DB
-// Send email (OTP) to 
-// Done ✅
+const initiateVerification = asyncHandler(async (req,res) => {
+    
+        const {email} = req.body;
 
-// Verification controller - 
-// Take OTP, email from user
-// Verify OTP against the email
-// Check if OTP is not expired
-// Change isVerified flag to 1
-// Done ✅
+        if(!email){
+            return new ApiError(400, "Email required");
+        }
+
+        const user = await User.findOne({email});
+
+        if(!user){
+            return res.status(404).json({success: false, message: "User does not exits"});
+        }
+
+        const otp = await generateAndSaveOTP(user._id);
+
+        await sendOTPEmail(email, otp);
+
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+            200,
+            {},
+            "OTP sent successfully"
+            )
+    );        
+
+});
+
+
+
+const verifyOTP = asyncHandler(async (req, res) => {
+
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+    throw new ApiError(400, "Email and OTP are required");
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+        throw new ApiError(404, "User does not exist");
+    }
+
+    //Verify OTP Against the User
+    const savedOTP = await OTP.findOne({
+        user: user._id
+    });
+
+    if (!savedOTP) {
+        throw new ApiError(404, "OTP not found or expired");
+    }
+
+    //Verify OTP Against the User
+    if (savedOTP.otp !== otp) {
+        throw new ApiError(400, "Invalid OTP");
+    }
+
+    //Check if OTP is Not Expired
+    if (savedOTP.expiresAt < new Date()) {
+        throw new ApiError(400, "OTP has expired");
+    }
+
+    //Change isVerified Flag to true
+    user.isVerified = true;
+
+    await user.save({
+        validateBeforeSave: false
+    });
+
+    //Delete the OTP After Successful Verification
+    await OTP.deleteOne({
+        _id: savedOTP._id
+    });
+
+    return res.status(200).json(
+        new ApiResponse(
+        200,
+        {},
+        "Email verified successfully"
+        )
+    );
+
+});
 
 
 const registerUser = asyncHandler(async(req, res) => {
@@ -322,5 +395,7 @@ export {
     refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
-    updateAccountDetails
+    updateAccountDetails,
+    initiateVerification,
+    verifyOTP
 } 

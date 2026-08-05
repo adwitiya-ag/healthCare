@@ -7,7 +7,9 @@ import {
     refreshAccessToken,
     changeCurrentPassword,
     getCurrentUser,
-    updateAccountDetails
+    updateAccountDetails,
+    initiateVerification,
+    verifyOTP
 } from "../controller/auth.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -15,6 +17,8 @@ import { verifyUser } from "../middleware/verifyUser.middleware.js";
 
 const router = Router();
 
+router.route("/send-otp").post(initiateVerification);
+router.route("/verify-otp").post(verifyOTP);
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
 router.route("/refresh-token").post(refreshAccessToken);
@@ -26,7 +30,6 @@ router.route("/logout")
     logoutUser
 );
 
-router.route("/refresh-token").post(refreshAccessToken);
 
 router.route("/change-password")
 .post(
