@@ -3,10 +3,10 @@ import { ApiError } from "./ApiError.js";
 import dotenv from "dotenv" ;
 
 dotenv.config({ //configuring dotenv
-    path: './.env'
+    path: './.env',
+    quiet: true
 })
 
-console.log(process.env.RESEND_API_KEY);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 async function sendOTPEmail(email, otp) {

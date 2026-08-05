@@ -4,7 +4,8 @@ import {app} from "./app.js";
 
 
 dotenv.config({ //configuring dotenv
-    path: './.env'
+    path: './.env',
+    quiet: true
 })
 
 

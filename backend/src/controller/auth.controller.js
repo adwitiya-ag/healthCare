@@ -125,7 +125,6 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
 const registerUser = asyncHandler(async(req, res) => {
     //step1 : Get the data from req.body
-    console.log(req.body)
     const {firstName, lastName, email, phoneNo, password, role, manager} = req.body;
     //Step 2: Validate required fields
     if(

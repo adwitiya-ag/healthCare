@@ -7,6 +7,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateRefExists } from "../utils/validateRefExists.js";
+import { generateDoctorId } from "../utils/counterUtils.js";
 
 // ------------------------------------------------------------------
 // @route   POST /doctor
@@ -60,8 +61,11 @@ const createDoctor = asyncHandler(async (req, res) => {
     throw new ApiError(409, "Doctor already exists");
   }
 
+  const doctorId = await generateDoctorId();
+
   // 4. else insert into DB
   const doctor = await Doctor.create({
+    doctorId: doctorId,
     doctorName: doctorName.trim(),
     cityId,
     areaId,

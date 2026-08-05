@@ -35,3 +35,21 @@ export const generateAreaCode = async () => {
     );
     return `ARE${String(counter.sequenceValue).padStart(4, "0")}`;
 };
+
+export const generateDoctorId = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { _id: "doctorId" },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+    );
+    return `DR${String(counter.sequenceValue).padStart(4, "0")}`;
+};
+
+export const generateChemistId = async () => {
+    const counter = await Counter.findOneAndUpdate(
+        { _id: "chemistId" },
+        { $inc: { sequenceValue: 1 } },
+        { new: true, upsert: true }
+    );
+    return `CH${String(counter.sequenceValue).padStart(4, "0")}`;
+};
