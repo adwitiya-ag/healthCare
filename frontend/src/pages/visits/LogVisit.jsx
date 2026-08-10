@@ -1,0 +1,140 @@
+import { useState, useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { MapPin, CheckCircle } from 'lucide-react';
+import PageHeader from '../../components/PageHeader';
+import FileUpload from '../../components/FileUpload';
+import { doctorsApi } from '../../api/doctorsApi';
+import { chemistsApi } from '../../api/chemistsApi';
+import { visitsApi } from '../../api/visitsApi';
+import { VISIT_TYPES } from '../../mocks/mockEnums';
+import { useAuth } from '../../context/AuthContext';
+
+const schema = z.object({
+  entityType: z.enum(['doctor','chemist']),
+  entityId:   z.string().min(1, 'Select a doctor or chemist'),
+  visitType:  z.string().min(1, 'Select visit type'),
+  notes:      z.string().min(5, 'Notes must be at least 5 characters'),
+  location:   z.string().min(2, 'Location is required'),
+});
+
+export default function LogVisit() {
+  const { user } = useAuth();
+  const [entityType, setEntityType] = useState('doctor');
+  const [doctors, setDoctors] = useState([]);
+  const [chemists, setChemists] = useState([]);
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoError, setPhotoError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm({
+    resolver: zodResolver(schema),
+    defaultValues: { entityType: 'doctor', entityId: '', visitType: '', notes: '', location: '' },
+  });
+
+  useEffect(() => {
+    doctorsApi.getAll({ mrId: user?.id }).then(setDoctors);
+    chemistsApi.getAll({ mrId: user?.id }).then(setChemists);
+    // Mock auto-fill location
+    setValue('location', `${user?.city}, ${user?.area}`);
+  }, [user, setValue]);
+
+  const watchedType = watch('entityType');
+  const entities = watchedType === 'doctor' ? doctors : chemists;
+
+  const onSubmit = async (data) => {
+    if (!photoFile) { setPhotoError('Photo proof is required'); return; }
+    const entityName = entities.find(e => String(e.id) === data.entityId)?.name || '';
+    await visitsApi.logVisit({ ...data, entityId: Number(data.entityId), entityName, mrId: user.id, mrName: user.name });
+    setSuccess(true);
+    setTimeout(() => { setSuccess(false); reset(); setPhotoFile(null); }, 3000);
+  };
+
+  if (success) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24">
+        <CheckCircle className="w-20 h-20 text-success mb-4" />
+        <h2 className="text-2xl font-bold text-slate-800 mb-2">Visit Logged!</h2>
+        <p className="text-slate-500">Your visit has been recorded successfully.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="animate-fade-in max-w-2xl">
+      <PageHeader title="Log a Visit" subtitle="Record your field visit details" />
+
+      <div className="card p-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" id="log-visit-form">
+          {/* Entity type tabs */}
+          <div>
+            <label className="form-label">Visit Type</label>
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
+              {['doctor','chemist'].map(type => (
+                <button
+                  key={type}
+                  type="button"
+                  id={`entity-type-${type}`}
+                  onClick={() => { setEntityType(type); setValue('entityType', type); setValue('entityId', ''); }}
+                  className={`px-5 py-2 rounded-lg text-sm font-medium transition-all capitalize ${entityType === type ? 'bg-white shadow-sm text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
+                >
+                  {type === 'doctor' ? '👨‍⚕️ Doctor' : '💊 Chemist'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="form-label">Select {entityType === 'doctor' ? 'Doctor' : 'Chemist'} *</label>
+            <select id="visit-entity" {...register('entityId')} className={errors.entityId ? 'form-input-error form-select' : 'form-select'}>
+              <option value="">Choose {entityType}…</option>
+              {entities.map(e => <option key={e.id} value={e.id}>{e.name} — {e.city}</option>)}
+            </select>
+            {errors.entityId && <p className="form-error">⚠ {errors.entityId.message}</p>}
+          </div>
+
+          <div>
+            <label className="form-label">Visit Category *</label>
+            <select id="visit-type" {...register('visitType')} className={errors.visitType ? 'form-input-error form-select' : 'form-select'}>
+              <option value="">Select visit type</option>
+              {VISIT_TYPES.map(v => <option key={v.id} value={v.label}>{v.label}</option>)}
+            </select>
+            {errors.visitType && <p className="form-error">⚠ {errors.visitType.message}</p>}
+          </div>
+
+          <div>
+            <label className="form-label">
+              <MapPin className="w-3.5 h-3.5 inline mr-1 text-primary-500" />
+              Location (auto-detected)
+            </label>
+            <input id="visit-location" type="text" {...register('location')} className={errors.location ? 'form-input-error' : 'form-input'} />
+            {errors.location && <p className="form-error">⚠ {errors.location.message}</p>}
+          </div>
+
+          <div>
+            <label className="form-label">Notes *</label>
+            <textarea id="visit-notes" rows={4} {...register('notes')} className={errors.notes ? 'form-input-error' : 'form-input'} placeholder="Describe the visit, topics discussed, next steps…" />
+            {errors.notes && <p className="form-error">⚠ {errors.notes.message}</p>}
+          </div>
+
+          <div>
+            <label className="form-label">Photo Proof * (JPG/PNG only)</label>
+            <FileUpload
+              id="visit-photo"
+              accept="image"
+              label="Upload Visit Photo"
+              value={photoFile}
+              error={photoError}
+              onFileSelect={(file, err) => { setPhotoFile(file); setPhotoError(err || ''); }}
+            />
+          </div>
+
+          <button id="log-visit-submit" type="submit" disabled={isSubmitting} className="btn-primary w-full py-3">
+            {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Submitting…</> : 'Submit Visit'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
