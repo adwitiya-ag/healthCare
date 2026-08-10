@@ -16,10 +16,10 @@ const schema = z.object({
     entityId: z.string().min(1, 'Select a doctor or chemist'),
     visitType: z.string().min(1, 'Select visit type'),
     notes: z.string().min(5, 'Notes must be at least 5 characters'),
-    coordinates: {
-        latitude: Number,
-        longitude: Number
-    }
+    coordinates: z.object({
+        latitude:z.number(),
+        longitude:z.number()
+    })
 });
 
 export default function LogVisit() {
@@ -38,28 +38,29 @@ export default function LogVisit() {
         defaultValues: { entityType: 'doctor', entityId: '', visitType: '', notes: '', location: '' },
     });
 
-    const getAddress = async (lat, lng) => {
+    const getAddress = async(lat,lng)=>{
 
-    try {
+    try{
 
-        const res = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+        const response = await fetch(
+            `http://localhost:3000/api/v1/location/revGeo?lat=${lat}&lng=${lng}`
         );
-        
-        const data = await res.json();
-        return data.display_name || `${lat}, ${lng}`;
 
-    } catch(error){
+        const data = await response.json();
+        return data;
+
+    }catch(error){
+
         console.log(error);
-        return `${lat}, ${lng}`;
+        return null;
+
     }
+
 };
 
     useEffect(() => {
         doctorsApi.getAll({ mrId: user?.id }).then(setDoctors);
         chemistsApi.getAll({ mrId: user?.id }).then(setChemists);
-        // Mock auto-fill location
-        // setValue('location', `${user?.city}, ${user?.area}`);
 
         if(!navigator.geolocation){
             console.log("Location not supported");
@@ -76,7 +77,7 @@ export default function LogVisit() {
             };
 
             setLocation(coords);
-
+            console.log(coords.accuracy)
 
             // convert coordinates to address
             const address = await getAddress(
@@ -85,8 +86,13 @@ export default function LogVisit() {
             );
 
 
-            setValue("location", address);
+            if(address){
 
+                setValue(
+                    "location",
+                    address.address
+                );
+            }
         },
         (err) => {
             console.log(err.message);
@@ -100,7 +106,7 @@ export default function LogVisit() {
     return () => {
         navigator.geolocation.clearWatch(watchId);
     };
-    }, [user, setValue]);
+    }, []);
 
     const watchedType = watch('entityType');
     const entities = watchedType === 'doctor' ? doctors : chemists;

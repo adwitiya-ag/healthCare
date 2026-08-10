@@ -25,6 +25,7 @@ import masterDataRouter from "./src/routes/masterData.routes.js";
 import doctorRouter from "./src/routes/doctor.routes.js";
 import chemistRouter from "./src/routes/chemist.routes.js";
 import doctorProductPreferenceRouter from "./src/routes/doctorProductPreference.routes.js";
+import locationRouter from "./src/routes/Location.route.js"
 
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
@@ -50,6 +51,8 @@ app.use("/api/v1", doctorRouter);
 app.use("/api/v1", chemistRouter);
 
 app.use("/api/v1/preference", doctorProductPreferenceRouter);
+
+app.use("/api/v1/location", locationRouter)
 
 
 app.use(errorHandler);
