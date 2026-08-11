@@ -18,16 +18,23 @@ app.use(express.static("public")) //Serving Static Files
 
 //import routes here
 import userRouter from "./src/routes/user.routes.js";
+import productRouter from "./src/routes/product.routes.js";
 import cityRouter from "./src/routes/city.routes.js";
 import areaRouter from "./src/routes/area.routes.js";
 import masterDataRouter from "./src/routes/masterData.routes.js";
 import doctorRouter from "./src/routes/doctor.routes.js";
 import chemistRouter from "./src/routes/chemist.routes.js";
 import tourPlanRouter from "./src/routes/Tourplan.routes.js";
+import doctorProductPreferenceRouter from "./src/routes/doctorProductPreference.routes.js";
+import locationRouter from "./src/routes/Location.route.js"
+
+import { errorHandler } from "./src/middleware/error.middleware.js";
 
 //routes decralation
 //write according to healthcare project 
 app.use("/api/v1/users", userRouter); //Any request starting with /api/v1/users goes to userRouter
+
+app.use("/api/v1/products", productRouter);
 
 // city.routes.js already defines full paths internally (/city, /cities, /city/:id)
 app.use("/api/v1", cityRouter);
@@ -46,5 +53,11 @@ app.use("/api/v1", chemistRouter);
 
 // tourPlan.routes.js already defines full paths internally (/upload, /export)
  app.use("/api/v1/tour", tourPlanRouter);
+app.use("/api/v1/preference", doctorProductPreferenceRouter);
+
+app.use("/api/v1/location", locationRouter)
+
+
+app.use(errorHandler);
 
 export {app}; //Exporting App so it can be used in another file

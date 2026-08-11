@@ -1,0 +1,17 @@
+export const mockChemists = [
+  { id: 1,  name: 'Sharma Medical Store',     city: 'Mumbai',     area: 'Andheri',       chemistType: 'Retail Chemist',    contact: '9876543210', active: true,  mrId: 1 },
+  { id: 2,  name: 'Life Care Pharmacy',       city: 'Mumbai',     area: 'Bandra',        chemistType: 'Retail Chemist',    contact: '9876543211', active: true,  mrId: 1 },
+  { id: 3,  name: 'City Medical Distributor', city: 'Pune',       area: 'Shivajinagar',  chemistType: 'Wholesale Chemist', contact: '9876543212', active: true,  mrId: 2 },
+  { id: 4,  name: 'Pune Hospital Pharmacy',   city: 'Pune',       area: 'Kothrud',       chemistType: 'Hospital Pharmacy', contact: '9876543213', active: true,  mrId: 2 },
+  { id: 5,  name: 'Nashik Drug House',        city: 'Nashik',     area: 'Gangapur Road', chemistType: 'Retail Chemist',    contact: '9876543214', active: false, mrId: 3 },
+  { id: 6,  name: 'Jan Aushadhi Kendra',      city: 'Nashik',     area: 'Satpur',        chemistType: 'Jan Aushadhi',      contact: '9876543215', active: true,  mrId: 3 },
+  { id: 7,  name: 'Apollo Pharmacy',          city: 'Nagpur',     area: 'Dharampeth',    chemistType: 'Retail Chemist',    contact: '9876543216', active: true,  mrId: 4 },
+  { id: 8,  name: 'Medplus',                  city: 'Nagpur',     area: 'Sadar',         chemistType: 'Retail Chemist',    contact: '9876543217', active: true,  mrId: 4 },
+  { id: 9,  name: 'Ahmedabad Wholesale',      city: 'Ahmedabad',  area: 'Satellite',     chemistType: 'Wholesale Chemist', contact: '9876543218', active: true,  mrId: 5 },
+  { id: 10, name: 'Gupta Medical',            city: 'Ahmedabad',  area: 'Navrangpura',   chemistType: 'Retail Chemist',    contact: '9876543219', active: true,  mrId: 5 },
+  { id: 11, name: 'Delhi Pharma Hub',         city: 'Delhi',      area: 'Rohini',        chemistType: 'Wholesale Chemist', contact: '9876543220', active: true,  mrId: 1 },
+  { id: 12, name: 'Capital Medicals',         city: 'Delhi',      area: 'Dwarka',        chemistType: 'Retail Chemist',    contact: '9876543221', active: false, mrId: 1 },
+  { id: 13, name: 'Surat Online Pharma',      city: 'Surat',      area: 'Adajan',        chemistType: 'Online Pharmacy',   contact: '9876543222', active: true,  mrId: 5 },
+  { id: 14, name: 'Vadodara Generic Store',   city: 'Vadodara',   area: 'Alkapuri',      chemistType: 'Jan Aushadhi',      contact: '9876543223', active: true,  mrId: 5 },
+  { id: 15, name: 'Rajkot Medical Depot',     city: 'Rajkot',     area: 'Mavdi',         chemistType: 'Wholesale Chemist', contact: '9876543224', active: true,  mrId: 5 },
+];
