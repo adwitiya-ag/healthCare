@@ -8,6 +8,22 @@ const companySchema = new Schema(
       trim: true,
       unique: true,
     },
+    companyId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Company",
+    },
+    email: {
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      unique: true,
+    },
+    phoneNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,

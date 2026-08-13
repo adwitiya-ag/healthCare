@@ -18,6 +18,7 @@ app.use(express.static("public")) //Serving Static Files
 
 //import routes here
 import userRouter from "./src/routes/user.routes.js";
+import companyRouter from "./src/routes/company.routes.js";
 import productRouter from "./src/routes/product.routes.js";
 import cityRouter from "./src/routes/city.routes.js";
 import areaRouter from "./src/routes/area.routes.js";
@@ -33,6 +34,8 @@ import { errorHandler } from "./src/middleware/error.middleware.js";
 //routes decralation
 //write according to healthcare project 
 app.use("/api/v1/users", userRouter); //Any request starting with /api/v1/users goes to userRouter
+
+app.use("/api/v1/company", companyRouter);
 
 app.use("/api/v1/products", productRouter);
 
