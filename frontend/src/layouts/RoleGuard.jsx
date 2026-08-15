@@ -14,7 +14,7 @@ export default function RoleGuard({ allowedRole, children }) {
 
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (allowedRole && role !== allowedRole) {
-    return <Navigate to={role === 'manager' ? '/manager' : '/mr'} replace />;
+    return <Navigate to={role === 'MANAGER' ? '/manager' : '/mr'} replace />;
   }
 
   return children;

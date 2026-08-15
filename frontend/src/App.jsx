@@ -50,7 +50,7 @@ export default function App() {
           <Route
             path="/manager"
             element={
-              <RoleGuard allowedRole="manager">
+              <RoleGuard allowedRole="MANAGER">
                 <ManagerLayout />
               </RoleGuard>
             }
