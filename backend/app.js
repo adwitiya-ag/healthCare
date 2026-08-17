@@ -28,6 +28,7 @@ import chemistRouter from "./src/routes/chemist.routes.js";
 import tourPlanRouter from "./src/routes/Tourplan.routes.js";
 import doctorProductPreferenceRouter from "./src/routes/doctorProductPreference.routes.js";
 import locationRouter from "./src/routes/Location.route.js"
+import sampleDistributionRouter from "./src/routes/sampleDistribution.routes.js";
 
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
@@ -59,6 +60,9 @@ app.use("/api/v1", chemistRouter);
 app.use("/api/v1/preference", doctorProductPreferenceRouter);
 
 app.use("/api/v1/location", locationRouter)
+
+//which sample to which doctor by which MR
+app.use("/api/v1/sample-distribution", sampleDistributionRouter);
 
 
 app.use(errorHandler);
