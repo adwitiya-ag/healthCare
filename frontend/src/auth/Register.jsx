@@ -5,14 +5,16 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Eye, EyeOff, UserPlus, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
+//firstName, lastName, email, phoneNo, password, role, manager
 const schema = z.object({
-  name: z.string().min(2, 'Name must be at least 2 characters'),
+  firstName: z.string().min(2, 'Name must be at least 2 characters'),
+  lastName: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Enter a valid email'),
-  phone: z.string().min(10, 'Enter a valid 10-digit phone number').max(10),
-  role: z.enum(['manager', 'mr'], { required_error: 'Select a role' }),
+  phoneNo: z.string().min(10, 'Enter a valid 10-digit phone number').max(10),
+  role: z.enum(['MANAGER', 'MR'], { required_error: 'Select a role' }),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string(),
+  manager: z.string().optional()
 }).refine(d => d.password === d.confirmPassword, {
   message: 'Passwords do not match',
   path: ['confirmPassword'],
@@ -33,7 +35,7 @@ export default function Register() {
     try {
       const { confirmPassword: _, ...payload } = data;
       const user = await registerUser(payload);
-      navigate(user.role === 'manager' ? '/manager' : '/mr');
+      navigate('/');
     } catch (err) {
       setApiError(err.message);
     } finally {
@@ -68,10 +70,17 @@ export default function Register() {
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="register-form">
             <div>
-              <label className="form-label">Full Name</label>
-              <input id="reg-name" type="text" {...register('name')} className={errors.name ? 'form-input-error' : 'form-input'} placeholder="John Doe" autoFocus />
-              {errors.name && <p className="form-error">⚠ {errors.name.message}</p>}
+              <label className="form-label">First Name</label>
+              <input id="reg-first-name" type="text" {...register('firstName')} className={errors.firstName ? 'form-input-error' : 'form-input'} placeholder="John" autoFocus />
+              {errors.firstName && <p className="form-error">⚠ {errors.firstName.message}</p>}
             </div>
+
+            <div>
+              <label className="form-label">Last Name</label>
+              <input id="reg-last-name" type="text" {...register('lastName')} className={errors.lastName ? 'form-input-error' : 'form-input'} placeholder="Doe" autoFocus />
+              {errors.lastName && <p className="form-error">⚠ {errors.lastName.message}</p>}
+            </div>
+
 
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -81,8 +90,8 @@ export default function Register() {
               </div>
               <div>
                 <label className="form-label">Phone</label>
-                <input id="reg-phone" type="tel" {...register('phone')} className={errors.phone ? 'form-input-error' : 'form-input'} placeholder="9876543210" />
-                {errors.phone && <p className="form-error">⚠ {errors.phone.message}</p>}
+                <input id="reg-phoneNo" type="tel" {...register('phoneNo')} className={errors.phoneNo ? 'form-input-error' : 'form-input'} placeholder="9XXXXXXXXX" />
+                {errors.phoneNo && <p className="form-error">⚠ {errors.phoneNo.message}</p>}
               </div>
             </div>
 
@@ -90,8 +99,8 @@ export default function Register() {
               <label className="form-label">Role</label>
               <select id="reg-role" {...register('role')} className={errors.role ? 'form-input-error form-select' : 'form-select'}>
                 <option value="">Select your role</option>
-                <option value="manager">Manager</option>
-                <option value="mr">Medical Representative (MR)</option>
+                <option value="MANAGER">Manager</option>
+                <option value="MR">Medical Representative (MR)</option>
               </select>
               {errors.role && <p className="form-error">⚠ {errors.role.message}</p>}
             </div>

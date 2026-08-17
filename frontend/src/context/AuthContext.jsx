@@ -33,8 +33,8 @@ export function AuthProvider({ children }) {
     }, []);
 
     const register = useCallback(async (data) => {
-        const { user: u, token } = await authApi.register(data);
-        persist({ ...u, token });
+        const { user: u } = await authApi.register(data);
+        // persist({ ...u });
         return u;
     }, []);
 

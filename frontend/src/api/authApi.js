@@ -29,13 +29,33 @@ export const authApi = {
     },
 
     async register(data) {
-        await delay();
-        const exists = users.find((u) => u.email === data.email);
-        if (exists) throw new Error("Email already registered");
-        const newUser = { id: Date.now(), ...data };
-        users.push(newUser);
-        const { password: _, ...safeUser } = newUser;
-        return { user: safeUser, token: `mock-token-${safeUser.id}` };
+        const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/users/register`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },//firstName, lastName, email, phoneNo, password, role, manager
+                body: JSON.stringify({
+                    firstName: data.firstName,
+                    lastName: data.lastName,
+                    email: data.email,
+                    phoneNo: data.phoneNo,
+                    password: data.password,
+                    role: data.role,
+                    manager: data.manager
+                }),
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`Failed to Register! Status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        return {
+            user: responseData.data
+        };
+       
     },
 
     async requestOtp(email) {
