@@ -72,11 +72,11 @@ function Sidebar({ open, onClose }) {
             }
           >
             <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-              {user?.name?.charAt(0)?.toUpperCase() || 'M'}
+              {user?.firstName?.charAt(0)?.toUpperCase() || 'M'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-white text-sm font-medium truncate">{user?.name || 'MR User'}</p>
-              <p className="text-sidebar-text text-xs truncate">{user?.city} · {user?.area}</p>
+              <p className="text-white text-sm font-medium truncate">{user?.firstName || 'MR User'}</p>
+              <p className="text-sidebar-text text-xs truncate">{user?.email}</p>
             </div>
             <UserCircle className="w-4 h-4 text-sidebar-text shrink-0" />
           </NavLink>

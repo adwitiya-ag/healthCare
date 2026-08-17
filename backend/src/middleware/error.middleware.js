@@ -6,7 +6,7 @@ const errorHandler = (err, req, res, next) => {
 
     if (err.code === 11000) {
         statusCode = 409;
-        message = "A product with these exact details already exists.";
+        message = message;
     }
 
     return res.status(statusCode).json({

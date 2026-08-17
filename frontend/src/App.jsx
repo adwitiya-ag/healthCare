@@ -72,7 +72,7 @@ export default function App() {
           <Route
             path="/mr"
             element={
-              <RoleGuard allowedRole="mr">
+              <RoleGuard allowedRole="MR">
                 <MRLayout />
               </RoleGuard>
             }

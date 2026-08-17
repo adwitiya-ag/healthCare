@@ -9,7 +9,8 @@ import {
     getCurrentUser,
     updateAccountDetails,
     initiateVerification,
-    verifyOTP
+    verifyOTP,
+    getAllMRsByManagerId
 } from "../controller/auth.controller.js";
 
 import { verifyJWT } from "../middleware/auth.middleware.js";
@@ -50,6 +51,13 @@ router.route("/update-account")
     verifyJWT,
     verifyUser,
     updateAccountDetails
+);
+
+router.route("/mrs")
+.get(
+    verifyJWT,
+    verifyUser,
+    getAllMRsByManagerId
 );
 
 export default router;

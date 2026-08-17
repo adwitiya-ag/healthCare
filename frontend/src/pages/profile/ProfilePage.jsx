@@ -43,13 +43,12 @@ export default function ProfilePage() {
   const { user, role } = useAuth();
 
   /* ── profile form state ── */
-  const [form, setForm] = useState({
-    name:  '',
-    email: '',
-    phone: '',
-    city:  '',
-    area:  '',
-  });
+  const [form, setForm] = useState({ 
+  firstName: '',
+  lastName: '',
+  email: '',
+  phoneNo: '',
+});
   const [saving, setSaving]   = useState(false);
   const [toast, setToast]     = useState(null);
 
@@ -62,17 +61,16 @@ export default function ProfilePage() {
   const [tab, setTab] = useState('info');
 
   /* Initialise form from auth context */
-  useEffect(() => {
-    if (user) {
-      setForm({
-        name:  user.name  || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        city:  user.city  || '',
-        area:  user.area  || '',
-      });
-    }
-  }, [user]);
+  useEffect(() => { 
+  if (user) { 
+    setForm({ 
+      firstName: user.firstName || '',
+      lastName: user.lastName || '',
+      email: user.email || '',
+      phoneNo: user.phoneNo || '',
+    }); 
+  }
+}, [user]);
 
   /* ── handlers ── */
   const handleChange = (e) => setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -123,8 +121,11 @@ export default function ProfilePage() {
 
   const toggleShowPw = (field) => setShowPw(prev => ({ ...prev, [field]: !prev[field] }));
 
-  const accentColor = role === 'manager' ? 'primary' : 'green';
-  const gradient    = avatarGradient(user?.name);
+  const isManager = role === "MANAGER";
+const accentColor = isManager ? "primary" : "green";
+  const gradient = avatarGradient(
+  `${user?.firstName} ${user?.lastName}`
+);
 
   /* ─────────────────── RENDER ─────────────────── */
   return (
@@ -136,7 +137,7 @@ export default function ProfilePage() {
       <div className="card overflow-hidden mb-6">
         {/* Banner gradient */}
         <div className={`h-36 bg-gradient-to-br ${
-          role === 'manager'
+          isManager
             ? 'from-primary-600 via-primary-700 to-indigo-800'
             : 'from-emerald-500 via-green-600 to-teal-700'
         } relative`}>
@@ -153,15 +154,15 @@ export default function ProfilePage() {
               flex items-center justify-center text-white text-4xl font-bold
               shadow-lg ring-4 ring-white shrink-0 select-none
             `}>
-              {user?.name?.charAt(0)?.toUpperCase() || 'U'}
+              {user?.firstName?.charAt(0)?.toUpperCase() || 'U'}
             </div>
 
             <div className="pb-1 flex-1 min-w-0">
-              <h1 className="text-2xl font-bold text-slate-900 truncate">{user?.name}</h1>
+              <h1 className="text-2xl font-bold text-slate-900 truncate">{user?.firstName} {user?.lastName}</h1>
               <div className="flex flex-wrap items-center gap-2 mt-1">
-                <span className={`badge ${role === 'manager' ? 'badge-info' : 'badge-success'}`}>
+                <span className={`badge ${isManager ? 'badge-info' : 'badge-success'}`}>
                   <Shield className="w-3 h-3" />
-                  {role === 'manager' ? 'Manager' : 'Medical Representative'}
+                  {isManager ? 'Manager' : 'Medical Representative'}
                 </span>
                 {user?.city && (
                   <span className="text-sm text-slate-500 flex items-center gap-1">
@@ -179,7 +180,7 @@ export default function ProfilePage() {
               { icon: Mail,      label: 'Email',    value: user?.email || '—' },
               { icon: Phone,     label: 'Phone',    value: user?.phone || '—' },
               { icon: Building2, label: 'City',     value: user?.city  || '—' },
-              { icon: Briefcase, label: 'Role',     value: role === 'manager' ? 'Manager' : 'MR' },
+              { icon: Briefcase, label: 'Role',     value: isManager ? 'Manager' : 'MR' },
             ].map(stat => (
               <div key={stat.label}
                 className="flex items-center gap-3 rounded-xl bg-slate-50 px-4 py-3 border border-surface-border"
@@ -286,7 +287,7 @@ export default function ProfilePage() {
 
             <div className="flex justify-end pt-2">
               <button id="profile-save" type="submit" disabled={saving}
-                className={`btn ${role === 'manager' ? 'btn-primary' : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm active:scale-95'} min-w-[140px]`}
+                className={`btn ${isManager ? 'btn-primary' : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm active:scale-95'} min-w-[140px]`}
               >
                 {saving ? (
                   <span className="flex items-center gap-2">
@@ -355,7 +356,7 @@ export default function ProfilePage() {
 
             <div className="flex justify-end pt-2">
               <button id="pw-save" type="submit" disabled={changingPw}
-                className={`btn ${role === 'manager' ? 'btn-primary' : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm active:scale-95'} min-w-[180px]`}
+                className={`btn ${isManager ? 'btn-primary' : 'bg-green-600 text-white hover:bg-green-700 focus:ring-green-500 shadow-sm active:scale-95'} min-w-[180px]`}
               >
                 {changingPw ? (
                   <span className="flex items-center gap-2">

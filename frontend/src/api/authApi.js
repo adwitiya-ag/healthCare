@@ -43,7 +43,7 @@ export const authApi = {
                     phoneNo: data.phoneNo,
                     password: data.password,
                     role: data.role,
-                    manager: data.manager
+                    managerEmployeeId: data.managerId
                 }),
             },
         );

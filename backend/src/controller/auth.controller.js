@@ -124,80 +124,95 @@ const verifyOTP = asyncHandler(async (req, res) => {
 
 
 const registerUser = asyncHandler(async(req, res) => {
-    //step1 : Get the data from req.body
-    const {firstName, lastName, email, phoneNo, password, role, manager} = req.body;
-    //Step 2: Validate required fields
+
+    const {
+        firstName,
+        lastName,
+        email,
+        phoneNo,
+        password,
+        role,
+        managerEmployeeId
+    } = req.body;
+
     if(
-        [firstName, lastName, email, phoneNo, password, role].some( (field) => field?.trim() === "" )
-    )
-    {
+        [firstName, lastName, email, phoneNo, password, role]
+        .some(field => field?.trim() === "")
+    ){
         throw new ApiError(400, "All fields are required");
     }
-    //Step 3: Check if email or phone already exists
-    const existedUser = await User.findOne({  email })
-    
+
+    const existedUser = await User.findOne({
+        email
+    });
+
     if(existedUser){
         throw new ApiError(409, "User with email already exists");
     }
 
-    //Step 4: Validate manager (only for MR)
     let managerId = null;
+
+    // Only MR needs manager assignment
     if(role === "MR"){
+
+        if(!managerEmployeeId){
+            throw new ApiError(
+                400,
+                "Manager Employee ID is required"
+            );
+        }
+
+        const manager = await User.findOne({
+            employeeId: managerEmployeeId
+        });
+
         if(!manager){
-            throw new ApiError(400, "Manager is required for MR");
+            throw new ApiError(
+                404,
+                "No manager found with given ID"
+            );
         }
 
-        if(!mongoose.Types.ObjectId.isValid(manager)){
-            throw new ApiError(400, "Invalid manager ID");
+        if(manager.role !== "MANAGER"){
+            throw new ApiError(
+                400,
+                "Employee ID does not belong to a manager"
+            );
         }
-
-        const managerUser = await User.findById(manager);
-
-        if(!managerUser){
-            throw new ApiError(404, "Manager not found");
-        }
-
-        if(managerUser.role !== "MANAGER"){
-            throw new ApiError(400, "Assigned user is not a manager");
-        }
-
-        if(!managerUser.isActive){
-            throw new ApiError(400, "Assigned manager is inactive");
-        }
+        managerId = manager._id;
     }
 
-    //Step 5: Generate Employee ID
     const employeeId = await generateEmployeeId();
-
-    //step6 : Generate Registration Number
     const regNo = await generateRegNo();
 
-    //step7: create user
     const user = await User.create({
+
         firstName,
         lastName,
         email,
         password,
         phoneNo,
         role,
+        // null for managers/admins
+        // manager id for MR
         manager: managerId,
         employeeId,
         regNo
-    })
+    });
 
-    const createdUser = await User.findById(user._id).select("-password -refreshToken")
+    const createdUser = await User.findById(user._id)
+        .select("-password -refreshToken");
 
-    if(!createdUser){
-        throw new ApiError(500, "Something went wrong while registering the user");
-    }
+    return res.status(201)
+    .json(
+        new ApiResponse(
+            201,
+            createdUser,
+            "User registered successfully"
+        )
+    );
 
-
-    //step8: create and send otp 
-
-
-    //step9: return success
-    return res.status(201).json(new ApiResponse(200, createdUser, "User registered Successfully"));
-})
+});
 
 const loginUser = asyncHandler(async (req, res) => {
     const{email, password, employeeId} = req.body;
@@ -386,6 +401,40 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
     return res.status(200).json(new ApiResponse(200, user, "Account details updated successfully"))
 });
 
+const getAllMRsByManagerId = asyncHandler(async(req, res) => {
+
+    const {managerId} = req.body;
+
+    if(!managerId){
+        throw new ApiError(404, "ManagerId is missing");
+    }
+
+    const manager = await User.findById(managerId);
+    if(!manager){
+        throw new ApiError(404, "No such manager found");
+    }
+
+    const MRs = await User.find({
+        manager: manager._id,
+        role: "MR"
+    })
+    .select("-password -refreshToken")
+
+    if(!MRs){
+        throw new ApiError(400, "No MRs are registered under this manager Id");
+    }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200, 
+                MRs, 
+                "MRs fetched successfully"
+            )
+        )
+})
+
 
 export {
     registerUser,
@@ -396,5 +445,6 @@ export {
     getCurrentUser,
     updateAccountDetails,
     initiateVerification,
-    verifyOTP
+    verifyOTP,
+    getAllMRsByManagerId
 } 

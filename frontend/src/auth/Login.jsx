@@ -25,6 +25,7 @@ export default function Login() {
         setApiError('');
         try {
             const user = await login(data.email, data.password);
+            console.log(user)
             navigate(user.role === 'MANAGER' ? '/manager' : '/mr');
         } catch (err) {
             setApiError(err.message);
