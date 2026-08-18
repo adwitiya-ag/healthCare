@@ -18,16 +18,29 @@ app.use(express.static("public")) //Serving Static Files
 
 //import routes here
 import userRouter from "./src/routes/user.routes.js";
+
 import companyRouter from "./src/routes/company.routes.js";
+
 import productRouter from "./src/routes/product.routes.js";
+
 import cityRouter from "./src/routes/city.routes.js";
+
 import areaRouter from "./src/routes/area.routes.js";
+
 import masterDataRouter from "./src/routes/masterData.routes.js";
+
 import doctorRouter from "./src/routes/doctor.routes.js";
+
 import chemistRouter from "./src/routes/chemist.routes.js";
+
 import tourPlanRouter from "./src/routes/Tourplan.routes.js";
+
 import doctorProductPreferenceRouter from "./src/routes/doctorProductPreference.routes.js";
+
 import locationRouter from "./src/routes/Location.route.js"
+
+import visitProofRouter from "./src/routes/visitProof.route.js";
+
 import sampleDistributionRouter from "./src/routes/sampleDistribution.routes.js";
 
 import { errorHandler } from "./src/middleware/error.middleware.js";
@@ -60,6 +73,8 @@ app.use("/api/v1", chemistRouter);
 app.use("/api/v1/preference", doctorProductPreferenceRouter);
 
 app.use("/api/v1/location", locationRouter)
+
+app.use("/api/v1/photo", visitProofRouter)
 
 //which sample to which doctor by which MR
 app.use("/api/v1/sample-distribution", sampleDistributionRouter);

@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { VisitProof } from "../models/visitProof.model.js";
-import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.js";
+import { uploadOnCloudinary, deleteFromCloudinary } from "../utils/cloudinary.photo.js";
 import mongoose from "mongoose";
 
 
@@ -74,7 +74,7 @@ const getAllVisitProof = asyncHandler(async (req, res) => {
     }
 
     // Manager can see all visit proofs
-    else if (req.user.role === "Manager") {
+    else if (req.user.role === "MANAGER") {
         visitProofs = await VisitProof
             .find()
             .sort({ createdAt: -1 });
@@ -100,7 +100,7 @@ const updateVisitProof = asyncHandler(async (req, res) => {
         throw new ApiError(400,"Invalid visit proof ID");
     }
 
-     // Notes is optional
+    // Notes is optional
     const updateData = {};
 
     if (Notes !== undefined) {
