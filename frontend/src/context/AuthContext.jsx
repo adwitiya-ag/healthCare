@@ -43,6 +43,15 @@ export function AuthProvider({ children }) {
         setUser(null);
     }, []);
 
+    const sendOTP = useCallback(async (data) => {
+        await authApi.requestOtp(data)
+    },[])
+
+    const verifyotp = useCallback(async(data) => {
+        const response = await authApi.verifyOtp(data)
+        return response;
+    })
+
     const value = {
         user,
         role: user?.role || null,
@@ -53,6 +62,8 @@ export function AuthProvider({ children }) {
         login,
         register,
         logout,
+        sendOTP,
+        verifyotp
     };
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

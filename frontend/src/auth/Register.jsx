@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
+import { email, z } from 'zod';
 import { Eye, EyeOff, UserPlus, Activity } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 //firstName, lastName, email, phoneNo, password, role, manager
@@ -21,14 +21,55 @@ const schema = z.object({
 });
 
 export default function Register() {
-    const { register: registerUser } = useAuth();
+    const { sendOTP, verifyotp, register: registerUser } = useAuth();
     const navigate = useNavigate();
     const [showPw, setShowPw] = useState(false);
     const [apiError, setApiError] = useState('');
     const [loading, setLoading] = useState(false);
     const [isMR, setIsMR] = useState(false)
 
+    const [userEmail, setUserEmail] = useState("");
+    const [otpStep, setOtpStep] = useState(false);
+    const [otp, setOtp] = useState("");
+    const [otpMessage, setOtpMessage] = useState("");
+    const [otpError, setOtpError] = useState("");
+    const [resendTimer, setResendTimer] = useState(0);
+
     const { register, handleSubmit, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
+
+    const verifyOTP = async () => {
+        try {
+            setOtpError("");
+            console.log(otp)
+
+            await verifyotp({
+            email: userEmail,
+            otp: otp
+        });
+
+            navigate("/");
+
+        } catch(err){
+            setOtpError(err.message);
+        }
+    };
+
+
+    const resendOTP = async () => {
+
+        if(resendTimer > 0) return;
+
+        try {
+
+            await sendOTP(userEmail);
+
+            setOtpMessage("OTP has been resent successfully.");
+            setResendTimer(30);
+
+        } catch(err){
+            setOtpError(err.message);
+        }
+    };
 
     const onSubmit = async (data) => {
         setLoading(true);
@@ -36,13 +77,31 @@ export default function Register() {
         try {
             const { confirmPassword: _, ...payload } = data;
             const user = await registerUser(payload);
-            navigate('/');
+
+            setUserEmail(payload.email)
+            await sendOTP(payload.email)
+            
+            setOtpStep(true);
+            setOtpMessage("OTP has been sent successfully to your email.");
+            setResendTimer(30);
+
         } catch (err) {
             setApiError(err.message);
         } finally {
             setLoading(false);
         }
     };
+
+    // Timer effect
+    useEffect(() => {
+        if (resendTimer <= 0) return;
+
+        const timer = setInterval(() => {
+            setResendTimer(prev => prev - 1);
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [resendTimer]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-primary-950 via-primary-900 to-primary-800 flex items-center justify-center p-4">
@@ -69,7 +128,8 @@ export default function Register() {
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="register-form">
+                    {!otpStep ? (
+                        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" id="register-form">
                         <div>
                             <label className="form-label">First Name</label>
                             <input id="reg-first-name" type="text" {...register('firstName')} className={errors.firstName ? 'form-input-error' : 'form-input'} placeholder="John" autoFocus />
@@ -141,6 +201,75 @@ export default function Register() {
                             {loading ? <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Creating account…</span> : <><UserPlus className="w-4 h-4" /> Create Account</>}
                         </button>
                     </form>
+                    ) : (
+                        <div className="space-y-5">
+
+                            <div className="text-center">
+                                <h3 className="text-lg font-semibold text-slate-800">
+                                    Verify OTP
+                                </h3>
+
+                                <p className="text-sm text-slate-500 mt-2">
+                                    We have sent a verification OTP to your email.
+                                </p>
+                            </div>
+
+
+                            {otpMessage && (
+                                <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                                    ✅ {otpMessage}
+                                </div>
+                            )}
+
+
+                            {otpError && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+                                    ⚠️ {otpError}
+                                </div>
+                            )}
+
+
+                            <input
+                                value={otp}
+                                onChange={(e)=>setOtp(e.target.value)}
+                                maxLength={6}
+                                placeholder="Enter 6 digit OTP"
+                                className="form-input text-center tracking-widest text-lg"
+                            />
+
+
+                            <button
+                                type='button'
+                                onClick={verifyOTP}
+                                className="btn-primary w-full py-2.5"
+                            >
+                                Verify OTP
+                            </button>
+
+
+                            <button
+                                type="button"
+                                disabled={resendTimer > 0}
+                                onClick={resendOTP}
+                                className={`w-full text-sm ${
+                                    resendTimer > 0
+                                    ? "text-slate-400 cursor-not-allowed"
+                                    : "text-primary-600 hover:text-primary-700"
+                                }`}
+                            >
+
+                                {
+                                    resendTimer > 0
+                                    ? `Resend OTP in ${resendTimer}s`
+                                    : "Resend OTP"
+                                }
+
+                            </button>
+
+                        </div>
+                    )}
+
+                    
 
                     <div className="mt-6 pt-4 border-t border-surface-border">
                         <p className="text-center text-sm text-slate-500">

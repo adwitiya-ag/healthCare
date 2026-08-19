@@ -80,8 +80,8 @@ export const authApi = {
         
     },
 
-    async verifyOtp(email, otp) {
-       const response = await fetch(
+    async verifyOtp(data) {
+        const response = await fetch(
         `${import.meta.env.VITE_BASE_URL}/users/verify-otp`,
             {
                 method: "POST",
@@ -89,8 +89,8 @@ export const authApi = {
                     "Content-Type": "application/json",
                 },//email, otp
                 body: JSON.stringify({
-                    email: email,
-                    otp: otp
+                    email: data.email,
+                    otp: data.otp
                 }),
             },
         );
