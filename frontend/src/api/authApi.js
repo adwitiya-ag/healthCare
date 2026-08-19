@@ -59,23 +59,71 @@ export const authApi = {
     },
 
     async requestOtp(email) {
-        await delay();
-        const user = users.find((u) => u.email === email);
-        if (!user) throw new Error("Email not found");
-        return { message: "OTP sent to your email (mock OTP: 123456)" };
+        const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/users/send-otp`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },//email
+                body: JSON.stringify({
+                    email: email
+                }),
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`OTP Request failed! Status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        return responseData;
+        
     },
 
     async verifyOtp(email, otp) {
-        await delay(300);
-        if (otp !== "123456") throw new Error("Invalid OTP");
-        return { verified: true };
+       const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/users/verify-otp`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },//email, otp
+                body: JSON.stringify({
+                    email: email,
+                    otp: otp
+                }),
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`OTP Verification Failed! Status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        return  responseData ;
+        
     },
 
-    async resetPassword(email, newPassword) {
-        await delay();
-        const idx = users.findIndex((u) => u.email === email);
-        if (idx === -1) throw new Error("User not found");
-        users[idx].password = newPassword;
-        return { message: "Password reset successfully" };
+    async resetPassword(oldPassword, newPassword) { // parameter name has to be same as in backend
+        //oldPassword, newPassword
+        const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/users/change-password`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    oldPassword: oldPassword,
+                    newPassword: newPassword
+                }),
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`Password cannot be changed! Status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        return  responseData ;
     },
+    
 };
