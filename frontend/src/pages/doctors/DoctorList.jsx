@@ -9,7 +9,7 @@ import FilterBar from '../../components/FilterBar';
 import Modal from '../../components/Modal';
 import StatusBadge from '../../components/StatusBadge';
 import { doctorsApi } from '../../api/doctorsApi';
-import { SPECIALISATIONS } from '../../mocks/mockEnums';
+// import { SPECIALISATIONS } from '../../mocks/mockEnums';
 import { useAuth } from '../../context/AuthContext';
 
 const schema = z.object({
@@ -43,8 +43,20 @@ function DoctorList() {
   const [editing, setEditing] = useState(null);
   const [CITIES, setCITIES] = useState([])
   const [QUALIFICATIONS, setQUALIFICATIONS] = useState([]);
+  const [SPECIALIZATIONS, setSPECIALIZATIONS] = useState([]);
 
   useEffect(() => {
+
+     const fetchSpecialization = async () => {
+      try{
+        const response = await doctorsApi.getSpecialization();
+        setSPECIALIZATIONS(response.data);
+        console.log("Specialization:", response.data);
+      }
+      catch (error) {
+        console.error(error);
+      }
+    }
 
     const fetchQualifications = async () => {
       try{
@@ -66,7 +78,7 @@ function DoctorList() {
         console.error(error);
       }
     };
-
+    fetchSpecialization();
     fetchQualifications();
     fetchCities();
   }, []);
@@ -126,7 +138,7 @@ function DoctorList() {
         filters={[
           { id: 'city', label: 'City', value: filterCity, onChange: setFilterCity, options: CITIES.map(c => ({ value: c._id, label: c.cityName })) },
           { id: 'qualification', label: 'Qualification', value: filterQual, onChange: setFilterQual, options: QUALIFICATIONS.map(q => ({ value: q._id, label: q.name })) },
-          { id: 'specialisation', label: 'Specialisation', value: filterSpec, onChange: setFilterSpec, options: SPECIALISATIONS.map(s => ({ value: s.label, label: s.label })) },
+          { id: 'specialisation', label: 'Specialisation', value: filterSpec, onChange: setFilterSpec, options: SPECIALIZATIONS.map(s => ({ value: s._id, label: s.name })) },
         ]}
         onClear={() => { setSearch(''); setFilterCity(''); setFilterQual(''); setFilterSpec(''); }}
       />

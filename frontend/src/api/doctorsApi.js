@@ -39,6 +39,24 @@ export const doctorsApi = {
     return data;
   },
 
+  async getSpecialization(){
+      const response = await fetch(
+      `${import.meta.env.VITE_BASE_URL}/doctor-specializations`,
+      {
+        method: "GET",
+        
+      },
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch Specialization");
+    }
+
+    const data = await response.json();
+    console.log("Specialization:", data);
+    return data;
+  },
+
+  
   async getAll(filters = {}) {
     await delay();
     let result = [...doctors];
