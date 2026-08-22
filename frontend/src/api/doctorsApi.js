@@ -4,15 +4,50 @@ const delay = (ms = 150) => new Promise(res => setTimeout(res, ms));
 let doctors = [...mockDoctors];
 
 export const doctorsApi = {
+
+  async getCities() {
+    const response = await fetch(
+      `${import.meta.env.VITE_BASE_URL}/cities`,
+      {
+        method: "GET",
+        
+      },
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch cities");
+    }
+
+    const data = await response.json();
+
+    return data;
+  },
+
+  async getQualifications(){
+    const response = await fetch(
+      `${import.meta.env.VITE_BASE_URL}/doctor-qualifications`,
+      {
+        method: "GET",
+        
+      },
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch qualifications");
+    }
+
+    const data = await response.json();
+    console.log("Qualifications:", data);
+    return data;
+  },
+
   async getAll(filters = {}) {
     await delay();
     let result = [...doctors];
-    if (filters.city)           result = result.filter(d => d.city === filters.city);
-    if (filters.area)           result = result.filter(d => d.area === filters.area);
-    if (filters.qualification)  result = result.filter(d => d.qualification === filters.qualification);
+    if (filters.city) result = result.filter(d => d.city === filters.city);
+    if (filters.area) result = result.filter(d => d.area === filters.area);
+    if (filters.qualification) result = result.filter(d => d.qualification === filters.qualification);
     if (filters.specialisation) result = result.filter(d => d.specialisation === filters.specialisation);
-    if (filters.search)         result = result.filter(d => d.name.toLowerCase().includes(filters.search.toLowerCase()) || d.city.toLowerCase().includes(filters.search.toLowerCase()));
-    if (filters.mrId)           result = result.filter(d => d.mrId === filters.mrId);
+    if (filters.search) result = result.filter(d => d.name.toLowerCase().includes(filters.search.toLowerCase()) || d.city.toLowerCase().includes(filters.search.toLowerCase()));
+    if (filters.mrId) result = result.filter(d => d.mrId === filters.mrId);
     return result;
   },
 

@@ -8,7 +8,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// This function takes a LOCAL file path (where multer temporarily
+// This function takes a LOCAL file path (where multer temporarily 
 // saved the file), uploads it to Cloudinary, then deletes the local
 // copy since we don't need it anymore.
 const uploadOnCloudinary = async (localFilePath) => {

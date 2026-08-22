@@ -9,25 +9,25 @@ import FilterBar from '../../components/FilterBar';
 import Modal from '../../components/Modal';
 import StatusBadge from '../../components/StatusBadge';
 import { doctorsApi } from '../../api/doctorsApi';
-import { QUALIFICATIONS, SPECIALISATIONS, CITIES } from '../../mocks/mockEnums';
+import { SPECIALISATIONS } from '../../mocks/mockEnums';
 import { useAuth } from '../../context/AuthContext';
 
 const schema = z.object({
-  name:           z.string().min(3, 'Name is required'),
-  city:           z.string().min(1, 'City is required'),
-  area:           z.string().min(1, 'Area is required'),
-  qualification:  z.string().min(1, 'Qualification is required'),
+  name: z.string().min(3, 'Name is required'),
+  city: z.string().min(1, 'City is required'),
+  area: z.string().min(1, 'Area is required'),
+  qualification: z.string().min(1, 'Qualification is required'),
   specialisation: z.string().min(1, 'Specialisation is required'),
 });
 
 const COLUMNS = [
-  { key: 'name',          label: 'Doctor Name' },
-  { key: 'city',          label: 'City' },
-  { key: 'area',          label: 'Area' },
+  { key: 'name', label: 'Doctor Name' },
+  { key: 'city', label: 'City' },
+  { key: 'area', label: 'Area' },
   { key: 'qualification', label: 'Qualification' },
-  { key: 'specialisation',label: 'Specialisation' },
-  { key: 'active',        label: 'Status', render: (v) => <StatusBadge active={v} /> },
-  { key: 'actions',       label: 'Actions', sortable: false, render: (_, row) => <RowActions row={row} /> },
+  { key: 'specialisation', label: 'Specialisation' },
+  { key: 'active', label: 'Status', render: (v) => <StatusBadge active={v} /> },
+  { key: 'actions', label: 'Actions', sortable: false, render: (_, row) => <RowActions row={row} /> },
 ];
 
 // This needs to be defined after context, so we pass in handlers
@@ -41,10 +41,40 @@ function DoctorList() {
   const [filterSpec, setFilterSpec] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [CITIES, setCITIES] = useState([])
+  const [QUALIFICATIONS, setQUALIFICATIONS] = useState([]);
+
+  useEffect(() => {
+
+    const fetchQualifications = async () => {
+      try{
+        const response = await doctorsApi.getQualifications();
+        setQUALIFICATIONS(response.data);
+        console.log("Qualifications:", response.data);
+      }
+      catch (error) {
+        console.error(error);
+      }
+    }
+
+    const fetchCities = async () => {
+      try {
+        const response = await doctorsApi.getCities();
+        setCITIES(response.data)
+        // console.log(response.data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchQualifications();
+    fetchCities();
+  }, []);
 
   const fetch = useCallback(async () => {
     setLoading(true);
     const data = await doctorsApi.getAll({ search, city: filterCity, qualification: filterQual, specialisation: filterSpec });
+
     setDoctors(data);
     setLoading(false);
   }, [search, filterCity, filterQual, filterSpec]);
@@ -60,7 +90,8 @@ function DoctorList() {
   const openEdit = (row) => { setEditing(row); setModalOpen(true); };
 
   const cols = COLUMNS.map(col => col.key === 'actions'
-    ? { ...col, render: (_, row) => (
+    ? {
+      ...col, render: (_, row) => (
         <div className="flex items-center gap-2">
           {isManager && (
             <>
@@ -71,7 +102,8 @@ function DoctorList() {
             </>
           )}
         </div>
-      )}
+      )
+    }
     : col
   );
 
@@ -92,8 +124,8 @@ function DoctorList() {
         onSearchChange={setSearch}
         searchPlaceholder="Search by name or city…"
         filters={[
-          { id: 'city', label: 'City', value: filterCity, onChange: setFilterCity, options: CITIES.map(c => ({ value: c, label: c })) },
-          { id: 'qualification', label: 'Qualification', value: filterQual, onChange: setFilterQual, options: QUALIFICATIONS.map(q => ({ value: q.label, label: q.label })) },
+          { id: 'city', label: 'City', value: filterCity, onChange: setFilterCity, options: CITIES.map(c => ({ value: c._id, label: c.cityName })) },
+          { id: 'qualification', label: 'Qualification', value: filterQual, onChange: setFilterQual, options: QUALIFICATIONS.map(q => ({ value: q._id, label: q.name })) },
           { id: 'specialisation', label: 'Specialisation', value: filterSpec, onChange: setFilterSpec, options: SPECIALISATIONS.map(s => ({ value: s.label, label: s.label })) },
         ]}
         onClear={() => { setSearch(''); setFilterCity(''); setFilterQual(''); setFilterSpec(''); }}
