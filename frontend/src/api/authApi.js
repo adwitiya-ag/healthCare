@@ -14,17 +14,20 @@ export const authApi = {
                 headers: {
                     "Content-Type": "application/json",
                 },
+                credentials: "include",
                 body: JSON.stringify({
                     email: email,
                     password: password,
                 }),
             },
         );
+        
+        const responseData = await response.json();
 
         if (!response.ok) {
-            throw new Error(`Failed to login! Status: ${response.status}`);
+            const errorMessage = responseData.message || `Login Failed! Status: ${response.status}`
+            throw new Error(errorMessage);
         }
-        const responseData = await response.json();
         return responseData.data;
     },
 

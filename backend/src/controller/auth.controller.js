@@ -240,7 +240,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
     const options = {
         httpOnly: true,
-        secure: true,
+        secure: false,
         sameSite: "lax"
     }
 
@@ -371,18 +371,27 @@ const getCurrentUser = asyncHandler(async(req, res) => {
 
 const updateAccountDetails = asyncHandler(async(req, res) => {
 
-    const{firstName, lastName, email} = req.body;
+    const{firstName, lastName, phoneNo} = req.body;
 
     
-    if(!firstName || !lastName || !email){
+    if(!firstName || !lastName || !phoneNo){
         throw new ApiError(400, "All fields are required");
     }
     
+    // Not allowing user to change his email
+    // Can cause email conflict in the DB
+
     // If email already exists in DB, throw Error else allow
-    const existingUser = await User.findOne({email});
+    // const existingUser = await User.findOne({email});
+    
+    // if(!existingUser){
+    //     throw new ApiError(400, "Different account already exists with this email");
+    // }
+
+    const existingUser = await User.findOne({phoneNo});
     
     if(existingUser){
-        throw new ApiError(400, "Different account already exists with this email");
+        throw new ApiError(400, "Different account already exists with this Phone Number");
     }
 
     const user = await User.findByIdAndUpdate(
@@ -391,7 +400,7 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
             $set: {
                 firstName,
                 lastName,
-                email: email
+                phoneNo
             }
         },
         {
