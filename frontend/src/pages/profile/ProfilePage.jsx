@@ -79,7 +79,7 @@ export default function ProfilePage() {
     e.preventDefault();
     setSaving(true);
     try {
-      await profileApi.updateProfile(user?.id, form);
+      await profileApi.updateProfile(form);
 
       // Update the stored auth data so sidebar & header reflect changes
       const stored = localStorage.getItem('mr_auth');
@@ -235,11 +235,19 @@ const accentColor = isManager ? "primary" : "green";
             <div className="grid sm:grid-cols-2 gap-5">
               {/* Name */}
               <div>
-                <label htmlFor="profile-name" className="form-label">Full Name</label>
+                <label htmlFor="profile-first-name" className="form-label">First Name</label>
                 <div className="relative">
                   <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input id="profile-name" name="name" value={form.name} onChange={handleChange}
-                    className="form-input pl-10" placeholder="Your name" />
+                  <input id="profile-first-name" name="firstName" value={form.firstName} onChange={handleChange}
+                    className="form-input pl-10" placeholder="Your first name" />
+                </div>
+              </div>
+              <div>
+                <label htmlFor="profile-last-name" className="form-label">Last Name</label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input id="profile-last-name" name="lastName" value={form.lastName} onChange={handleChange}
+                    className="form-input pl-10" placeholder="Your last name" />
                 </div>
               </div>
 

@@ -5,7 +5,7 @@ export const profileApi = {
    * Update basic profile fields (name, phone, city, area).
    * In production this would be a PATCH /api/profile.
    */
-  async updateProfile(firstName, lastName, email) {
+  async updateProfile(form) {
     //firstName, lastName, email
      const response = await fetch(
         `${import.meta.env.VITE_BASE_URL}/users/update-account`,
@@ -16,9 +16,9 @@ export const profileApi = {
                 },
                 credentials: "include",
                 body: JSON.stringify({
-                    firstName: firstName,
-                    lastName: lastName,
-                    email:  email
+                    firstName: form.firstName,
+                    lastName: form.lastName,
+                    email:  form.email
                 }),
             },
         );

@@ -48,7 +48,7 @@ export const PREFERENCE_LEVELS = [
 
 export const CITIES = [
   'Mumbai', 'Pune', 'Nashik', 'Aurangabad', 'Nagpur',
-  'Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Delhi',
+  'Ahmedabad', 'Kolkata', 'Vadodara', 'Rajkot', 'Delhi',
 ];
 
 export const AREAS = {
@@ -58,7 +58,7 @@ export const AREAS = {
   Aurangabad: ['MIDC', 'Cantonment', 'Cidco', 'Garkheda'],
   Nagpur: ['Dharampeth', 'Sadar', 'Sitabuldi', 'Wardhaman Nagar'],
   Ahmedabad: ['Navrangpura', 'Satellite', 'Bopal', 'Maninagar'],
-  Surat: ['Adajan', 'Varachha', 'Katargam', 'Udhna'],
+  Kolkata: ['Park Street', 'Salt Lake', 'Behala', 'Shyamaprasad'],
   Vadodara: ['Alkapuri', 'Fatehgunj', 'Gotri', 'Manjalpur'],
   Rajkot: ['Kalawad Road', 'Mavdi', 'Raiya Road', 'Tagore Marg'],
   Delhi: ['Connaught Place', 'Rohini', 'Dwarka', 'Lajpat Nagar'],

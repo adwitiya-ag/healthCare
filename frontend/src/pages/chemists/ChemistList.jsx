@@ -9,58 +9,99 @@ import FilterBar from '../../components/FilterBar';
 import Modal from '../../components/Modal';
 import StatusBadge from '../../components/StatusBadge';
 import { chemistsApi } from '../../api/chemistsApi';
-import { CHEMIST_TYPES, CITIES } from '../../mocks/mockEnums';
 import { useAuth } from '../../context/AuthContext';
 
 const schema = z.object({
-  name:        z.string().min(3, 'Name is required'),
-  city:        z.string().min(1, 'City is required'),
-  area:        z.string().min(1, 'Area is required'),
+  name: z.string().min(3, 'Name is required'),
+  cityId: z.string().min(1, 'City is required'),
+  areaId: z.string().min(1, 'Area is required'),
   chemistType: z.string().min(1, 'Chemist type is required'),
-  contact:     z.string().min(10, 'Enter valid contact number').max(10),
 });
 
 const COLUMNS = [
-  { key: 'name',        label: 'Chemist Name' },
-  { key: 'city',        label: 'City' },
-  { key: 'area',        label: 'Area' },
+  { key: 'name', label: 'Chemist Name' },
+  { key: 'city', label: 'City' },
+  { key: 'area', label: 'Area' },
   { key: 'chemistType', label: 'Type' },
-  { key: 'contact',     label: 'Contact' },
-  { key: 'active',      label: 'Status', render: (v) => <StatusBadge active={v} /> },
-  { key: 'actions',     label: 'Actions', sortable: false },
+  { key: 'active', label: 'Status', render: (v) => <StatusBadge active={v} /> },
+  { key: 'actions', label: 'Actions', sortable: false },
 ];
+
+const CHEMIST_TYPES = ['RETAIL', 'WHOLESALE', 'HOSPITAL', 'ONLINE'];
 
 export default function ChemistList() {
   const { isManager } = useAuth();
   const [chemists, setChemists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterCity, setFilterCity] = useState('');
+  const [filterCityId, setFilterCityId] = useState('');
+  const [filterAreaId, setFilterAreaId] = useState('');
   const [filterType, setFilterType] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
 
+  const [CITIES, setCITIES] = useState([]);
+  const [AREAS, setAREAS] = useState([]);
+
+  useEffect(() => {
+    const fetchCities = async () => {
+      try {
+        const response = await chemistsApi.getCities();
+        setCITIES(response.data);
+      } catch (error) { console.error(error); }
+    };
+    fetchCities();
+  }, []);
+
+  // Cascading: refetch areas whenever the FILTER city changes; reset area filter
+  useEffect(() => {
+    const fetchAreas = async () => {
+      try {
+        const response = await chemistsApi.getAreas(filterCityId || undefined);
+        setAREAS(response.data);
+      } catch (error) { console.error(error); }
+    };
+    fetchAreas();
+    setFilterAreaId('');
+  }, [filterCityId]);
+
   const fetch = useCallback(async () => {
     setLoading(true);
-    const data = await chemistsApi.getAll({ search, city: filterCity, chemistType: filterType });
+    const data = await chemistsApi.getAll({
+      search,
+      cityId: filterCityId,
+      areaId: filterAreaId,
+      chemistType: filterType,
+    });
     setChemists(data);
     setLoading(false);
-  }, [search, filterCity, filterType]);
+  }, [search, filterCityId, filterAreaId, filterType]);
 
   useEffect(() => { fetch(); }, [fetch]);
 
   const handleToggle = async (id) => { await chemistsApi.toggleActive(id); fetch(); };
 
-  const cols = COLUMNS.map(col => col.key === 'actions'
-    ? { ...col, render: (_, row) => isManager ? (
-        <div className="flex items-center gap-2">
-          <button id={`edit-chemist-${row.id}`} onClick={() => { setEditing(row); setModalOpen(true); }} className="btn-ghost btn-sm"><Pencil className="w-3.5 h-3.5" /></button>
-          <button id={`toggle-chemist-${row.id}`} onClick={() => handleToggle(row.id)} className={`btn-sm ${row.active ? 'btn-secondary text-danger' : 'btn-secondary text-success'}`}>
-            {row.active ? 'Deactivate' : 'Activate'}
-          </button>
-        </div>
-      ) : null }
-    : col
+  const cols = COLUMNS.map((col) =>
+    col.key === 'actions'
+      ? {
+          ...col,
+          render: (_, row) =>
+            isManager ? (
+              <div className="flex items-center gap-2">
+                <button id={`edit-chemist-${row.id}`} onClick={() => { setEditing(row); setModalOpen(true); }} className="btn-ghost btn-sm">
+                  <Pencil className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  id={`toggle-chemist-${row.id}`}
+                  onClick={() => handleToggle(row.id)}
+                  className={`btn-sm ${row.active ? 'btn-secondary text-danger' : 'btn-secondary text-success'}`}
+                >
+                  {row.active ? 'Deactivate' : 'Activate'}
+                </button>
+              </div>
+            ) : null,
+        }
+      : col
   );
 
   return (
@@ -68,11 +109,13 @@ export default function ChemistList() {
       <PageHeader
         title="Chemist List"
         subtitle={`${chemists.length} chemists found`}
-        action={isManager && (
-          <button id="add-chemist-btn" onClick={() => { setEditing(null); setModalOpen(true); }} className="btn-primary">
-            <Plus className="w-4 h-4" /> Add Chemist
-          </button>
-        )}
+        action={
+          isManager && (
+            <button id="add-chemist-btn" onClick={() => { setEditing(null); setModalOpen(true); }} className="btn-primary">
+              <Plus className="w-4 h-4" /> Add Chemist
+            </button>
+          )
+        }
       />
 
       <FilterBar
@@ -80,10 +123,11 @@ export default function ChemistList() {
         onSearchChange={setSearch}
         searchPlaceholder="Search by name or city…"
         filters={[
-          { id: 'city', label: 'City', value: filterCity, onChange: setFilterCity, options: CITIES.map(c => ({ value: c, label: c })) },
-          { id: 'chemistType', label: 'Chemist Type', value: filterType, onChange: setFilterType, options: CHEMIST_TYPES.map(t => ({ value: t.label, label: t.label })) },
+          { id: 'city', label: 'City', value: filterCityId, onChange: setFilterCityId, options: CITIES.map((c) => ({ value: c._id, label: c.cityName })) },
+          { id: 'area', label: 'Area', value: filterAreaId, onChange: setFilterAreaId, options: AREAS.map((a) => ({ value: a._id, label: a.areaName })) },
+          { id: 'chemistType', label: 'Chemist Type', value: filterType, onChange: setFilterType, options: CHEMIST_TYPES.map((t) => ({ value: t, label: t })) },
         ]}
-        onClear={() => { setSearch(''); setFilterCity(''); setFilterType(''); }}
+        onClear={() => { setSearch(''); setFilterCityId(''); setFilterAreaId(''); setFilterType(''); }}
       />
 
       <DataTable columns={cols} data={chemists} loading={loading} emptyMessage="No such Chemist found" />
@@ -94,19 +138,27 @@ export default function ChemistList() {
           onClose={() => setModalOpen(false)}
           editing={editing}
           onSaved={fetch}
+          CITIES={CITIES}
         />
       )}
     </div>
   );
 }
 
-function ChemistFormModal({ isOpen, onClose, editing, onSaved }) {
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(schema) });
+function ChemistFormModal({ isOpen, onClose, editing, onSaved, CITIES }) {
+  const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(schema) });
+  const [formAreas, setFormAreas] = useState([]);
+  const selectedCityId = watch('cityId');
 
   useEffect(() => {
-    if (editing) reset(editing);
-    else reset({ name: '', city: '', area: '', chemistType: '', contact: '' });
+    if (editing) reset({ name: editing.name, cityId: editing.cityId, areaId: editing.areaId, chemistType: editing.chemistType });
+    else reset({ name: '', cityId: '', areaId: '', chemistType: '' });
   }, [editing, reset]);
+
+  useEffect(() => {
+    if (!selectedCityId) { setFormAreas([]); return; }
+    chemistsApi.getAreas(selectedCityId).then((res) => setFormAreas(res.data)).catch(console.error);
+  }, [selectedCityId]);
 
   const onSubmit = async (data) => {
     if (editing) await chemistsApi.update(editing.id, data);
@@ -126,32 +178,28 @@ function ChemistFormModal({ isOpen, onClose, editing, onSaved }) {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="form-label">City *</label>
-            <select id="chem-city" {...register('city')} className={errors.city ? 'form-input-error form-select' : 'form-select'}>
+            <select id="chem-city" {...register('cityId')} className={errors.cityId ? 'form-input-error form-select' : 'form-select'}>
               <option value="">Select City</option>
-              {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+              {CITIES.map((c) => <option key={c._id} value={c._id}>{c.cityName}</option>)}
             </select>
-            {errors.city && <p className="form-error">⚠ {errors.city.message}</p>}
+            {errors.cityId && <p className="form-error">⚠ {errors.cityId.message}</p>}
           </div>
           <div>
             <label className="form-label">Area *</label>
-            <input id="chem-area" type="text" {...register('area')} className={errors.area ? 'form-input-error' : 'form-input'} placeholder="e.g. Andheri" />
-            {errors.area && <p className="form-error">⚠ {errors.area.message}</p>}
+            <select id="chem-area" {...register('areaId')} disabled={!selectedCityId} className={errors.areaId ? 'form-input-error form-select' : 'form-select'}>
+              <option value="">{selectedCityId ? 'Select Area' : 'Select City first'}</option>
+              {formAreas.map((a) => <option key={a._id} value={a._id}>{a.areaName}</option>)}
+            </select>
+            {errors.areaId && <p className="form-error">⚠ {errors.areaId.message}</p>}
           </div>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="form-label">Chemist Type *</label>
-            <select id="chem-type" {...register('chemistType')} className={errors.chemistType ? 'form-input-error form-select' : 'form-select'}>
-              <option value="">Select Type</option>
-              {CHEMIST_TYPES.map(t => <option key={t.id} value={t.label}>{t.label}</option>)}
-            </select>
-            {errors.chemistType && <p className="form-error">⚠ {errors.chemistType.message}</p>}
-          </div>
-          <div>
-            <label className="form-label">Contact Number *</label>
-            <input id="chem-contact" type="tel" {...register('contact')} className={errors.contact ? 'form-input-error' : 'form-input'} placeholder="9876543210" />
-            {errors.contact && <p className="form-error">⚠ {errors.contact.message}</p>}
-          </div>
+        <div>
+          <label className="form-label">Chemist Type *</label>
+          <select id="chem-type" {...register('chemistType')} className={errors.chemistType ? 'form-input-error form-select' : 'form-select'}>
+            <option value="">Select Type</option>
+            {CHEMIST_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+          </select>
+          {errors.chemistType && <p className="form-error">⚠ {errors.chemistType.message}</p>}
         </div>
         <div className="flex gap-3 pt-2">
           <button id="chem-cancel" type="button" onClick={onClose} className="btn-secondary flex-1">Cancel</button>

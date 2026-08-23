@@ -21,6 +21,7 @@ export default function ManageQualifications() {
   const openEdit = (item) => { setEditing(item); reset({ label: item.label }); setModalOpen(true); };
 
   const onSubmit = async (data) => {
+    // await doctorsapi.addQualification(name)
     await new Promise(r => setTimeout(r, 200));
     if (editing) {
       setItems(prev => prev.map(i => i.id === editing.id ? { ...i, ...data } : i));
