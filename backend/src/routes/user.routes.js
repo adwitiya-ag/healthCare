@@ -25,39 +25,14 @@ router.route("/login").post(loginUser);
 router.route("/refresh-token").post(refreshAccessToken);
 
 //secured routes
-router.route("/logout")
-.post(
-    verifyJWT,
-    logoutUser
-);
+router.route("/logout").post(verifyJWT,logoutUser);
 
+router.route("/change-password").post(verifyJWT,verifyUser,changeCurrentPassword);
 
-router.route("/change-password")
-.post(
-    verifyJWT,
-    verifyUser,
-    changeCurrentPassword
-);
+router.route("/current-user").get(verifyJWT,verifyUser,getCurrentUser);
 
-router.route("/current-user")
-.get(
-    verifyJWT,
-    verifyUser,
-    getCurrentUser
-);
+router.route("/update-account").patch(verifyJWT,verifyUser,updateAccountDetails);
 
-router.route("/update-account")
-.patch(
-    verifyJWT,
-    verifyUser,
-    updateAccountDetails
-);
-
-router.route("/mrs")
-.get(
-    verifyJWT,
-    verifyUser,
-    getAllMRsByManagerId
-);
+router.route("/mrs").get(verifyJWT,verifyUser,getAllMRsByManagerId);
 
 export default router;

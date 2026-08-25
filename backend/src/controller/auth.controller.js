@@ -40,13 +40,13 @@ const initiateVerification = asyncHandler(async (req,res) => {
         const {email} = req.body;
 
         if(!email){
-            return new ApiError(400, "Email required");
+            throw new ApiError(400, "Email required");
         }
 
         const user = await User.findOne({email});
 
         if(!user){
-            return res.status(404).json({success: false, message: "User does not exits"});
+            throw new ApiError(404, "User does not exits");
         }
 
         const otp = await generateAndSaveOTP(user._id);
@@ -91,7 +91,7 @@ const verifyOTP = asyncHandler(async (req, res) => {
     }
 
     //Verify OTP Against the User
-    if (savedOTP.otp !== otp) {
+    if (savedOTP.otp !== String(otp)) {
         throw new ApiError(400, "Invalid OTP");
     }
 
@@ -372,16 +372,18 @@ const updateAccountDetails = asyncHandler(async(req, res) => {
 
     const{firstName, lastName, email} = req.body;
 
-    
     if(!firstName || !lastName || !email){
         throw new ApiError(400, "All fields are required");
     }
     
     // If email already exists in DB, throw Error else allow
-    const existingUser = await User.findOne({email});
-    
-    if(existingUser){
-        throw new ApiError(400, "Different account already exists with this email");
+    const existingUser = await User.findOne({
+        email,
+        _id: { $ne: req.user?._id }
+    });
+
+    if (existingUser) {
+        throw new ApiError(400,"Different account already exists with this email");
     }
 
     const user = await User.findByIdAndUpdate(
