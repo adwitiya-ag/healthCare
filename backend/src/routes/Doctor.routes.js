@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createDoctor, getDoctors } from "../controller/doctor.controller.js";
+import { createDoctor, getDoctors } from "../controller/Doctor.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js"; // confirm actual export name
 import { verifyUser } from "../middleware/verifyUser.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";

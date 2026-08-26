@@ -1,40 +1,82 @@
-import { mockChemists } from '../mocks/mockChemists';
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-const delay = (ms = 150) => new Promise(res => setTimeout(res, ms));
-let chemists = [...mockChemists];
+const mapChemist = (c) => ({
+  id: c._id,
+  name: c.chemistName,
+  cityId: c.cityId?._id,
+  city: c.cityId?.cityName,
+  areaId: c.areaId?._id,
+  area: c.areaId?.areaName,
+  chemistType: c.chemistType,
+  active: c.isActive,
+});
 
 export const chemistsApi = {
+  async getCities() {
+    const response = await fetch(`${BASE_URL}/cities`);
+    if (!response.ok) throw new Error('Failed to fetch cities');
+    return response.json();
+  },
+
+  async getAreas(cityId) {
+    const url = cityId ? `${BASE_URL}/areas?cityId=${cityId}` : `${BASE_URL}/areas`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('Failed to fetch areas');
+    return response.json();
+  },
+
+  // chemistType is a fixed enum (RETAIL/WHOLESALE/HOSPITAL/ONLINE) — no API needed
+  getChemistTypes() {
+    return ['RETAIL', 'WHOLESALE', 'HOSPITAL', 'ONLINE'];
+  },
+
   async getAll(filters = {}) {
-    await delay();
-    let result = [...chemists];
-    if (filters.city)        result = result.filter(c => c.city === filters.city);
-    if (filters.area)        result = result.filter(c => c.area === filters.area);
-    if (filters.chemistType) result = result.filter(c => c.chemistType === filters.chemistType);
-    if (filters.search)      result = result.filter(c => c.name.toLowerCase().includes(filters.search.toLowerCase()) || c.city.toLowerCase().includes(filters.search.toLowerCase()));
-    if (filters.mrId)        result = result.filter(c => c.mrId === filters.mrId);
+    const params = new URLSearchParams();
+    if (filters.cityId) params.append('cityId', filters.cityId);
+    if (filters.areaId) params.append('areaId', filters.areaId);
+    if (filters.chemistType) params.append('chemistType', filters.chemistType);
+
+    const response = await fetch(`${BASE_URL}/chemists?${params.toString()}`);
+    if (!response.ok) throw new Error('Failed to fetch chemists');
+    const json = await response.json();
+    let result = (json.data || []).map(mapChemist);
+
+    if (filters.search) {
+      const q = filters.search.toLowerCase();
+      result = result.filter(
+        (c) => c.name.toLowerCase().includes(q) || (c.city || '').toLowerCase().includes(q)
+      );
+    }
     return result;
   },
 
   async create(data) {
-    await delay(300);
-    const newChemist = { id: Date.now(), active: true, ...data };
-    chemists.push(newChemist);
-    return newChemist;
+    const payload = {
+      chemistName: data.name,
+      cityId: data.cityId,
+      areaId: data.areaId,
+      chemistType: data.chemistType,
+    };
+    const response = await fetch(`${BASE_URL}/chemist`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // createChemist is behind verifyJWT (cookie auth)
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to create chemist');
+    }
+    const json = await response.json();
+    return mapChemist(json.data);
   },
 
-  async update(id, data) {
-    await delay(300);
-    const idx = chemists.findIndex(c => c.id === id);
-    if (idx === -1) throw new Error('Chemist not found');
-    chemists[idx] = { ...chemists[idx], ...data };
-    return chemists[idx];
+  // ⚠ backend has NO update or toggle-active route for chemists yet —
+  // only POST /chemist and GET /chemists exist (see chemist.routes.js).
+  async update() {
+    throw new Error('Backend has no update-chemist endpoint yet — ask backend dev to add PATCH /chemist/:id');
   },
-
-  async toggleActive(id) {
-    await delay();
-    const idx = chemists.findIndex(c => c.id === id);
-    if (idx === -1) throw new Error('Chemist not found');
-    chemists[idx].active = !chemists[idx].active;
-    return chemists[idx];
+  async toggleActive() {
+    throw new Error('Backend has no toggle-active-chemist endpoint yet — ask backend dev to add PATCH /chemist/:id/toggle');
   },
 };

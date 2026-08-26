@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createChemist, getChemists } from "../controller/chemist.controller.js";
+import { createChemist, getChemists } from "../controller/Chemist.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { verifyUser } from "../middleware/verifyUser.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
