@@ -14,12 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 const schema = z.object({
     entityType: z.enum(['doctor', 'chemist']),
     entityId: z.string().min(1, 'Select a doctor or chemist'),
-    visitType: z.string().min(1, 'Select visit type'),
     notes: z.string().min(5, 'Notes must be at least 5 characters'),
-    coordinates: z.object({
-        latitude:z.number(),
-        longitude:z.number()
-    })
 });
 
 export default function LogVisit() {
@@ -27,7 +22,7 @@ export default function LogVisit() {
     const [entityType, setEntityType] = useState('doctor');
     const [doctors, setDoctors] = useState([]);
     const [chemists, setChemists] = useState([]);
-    const [photoFile, setPhotoFile] = useState(null);
+    const [photoFile, setPhotoFile] = useState([]);
     const [photoError, setPhotoError] = useState('');
     const [success, setSuccess] = useState(false);
 
@@ -39,24 +34,9 @@ export default function LogVisit() {
     });
 
     const getAddress = async(lat,lng)=>{
-
-    try{
-
-        const response = await fetch(
-            `http://localhost:3000/api/v1/location/revGeo?lat=${lat}&lng=${lng}`
-        );
-
-        const data = await response.json();
+        const data = await visitsApi.getAddress({lat, lng})
         return data;
-
-    }catch(error){
-
-        console.log(error);
-        return null;
-
-    }
-
-};
+    };
 
     useEffect(() => {
         doctorsApi.getAll({ mrId: user?.id }).then(setDoctors);
@@ -112,11 +92,47 @@ export default function LogVisit() {
     const entities = watchedType === 'doctor' ? doctors : chemists;
 
     const onSubmit = async (data) => {
-        if (!photoFile) { setPhotoError('Photo proof is required'); return; }
-        const entityName = entities.find(e => String(e.id) === data.entityId)?.name || '';
-        await visitsApi.logVisit({ ...data, entityId: Number(data.entityId), entityName, mrId: user.id, mrName: user.name });
+        if (!photoFile || photoFile.length === 0) {
+            setPhotoError("Photo proof is required");
+            return;
+        }
+
+        if(!location){
+            alert("Location not detected")
+            return;
+        }
+
+        const formData = new FormData()
+
+        if(data.entityType === "doctor"){
+            formData.append("doctorId", data.entityId)
+        }else{
+            formData.append("chemistId", data.entityId)
+        }
+
+        // Location
+        formData.append("latitude", location.latitude);
+        formData.append("longitude", location.longitude);
+        formData.append("accuracy", location.accuracy);
+
+        // Notes
+        formData.append("Notes", data.notes);
+
+        // Photos
+        photoFile.forEach((file) => {
+            formData.append("photos", file);
+        });
+
+        await visitsApi.addVisitProof(formData);
+
         setSuccess(true);
-        setTimeout(() => { setSuccess(false); reset(); setPhotoFile(null); }, 3000);
+
+        setTimeout(() => {
+            setSuccess(false);
+            reset();
+            setPhotoFile([]);
+            setLocation(null);
+        }, 3000);
     };
 
     if (success) {
@@ -162,14 +178,14 @@ export default function LogVisit() {
                         {errors.entityId && <p className="form-error">⚠ {errors.entityId.message}</p>}
                     </div>
 
-                    <div>
+                    {/* <div>
                         <label className="form-label">Visit Category *</label>
                         <select id="visit-type" {...register('visitType')} className={errors.visitType ? 'form-input-error form-select' : 'form-select'}>
                             <option value="">Select visit type</option>
                             {VISIT_TYPES.map(v => <option key={v.id} value={v.label}>{v.label}</option>)}
                         </select>
                         {errors.visitType && <p className="form-error">⚠ {errors.visitType.message}</p>}
-                    </div>
+                    </div> */}
 
                     <div>
                         <label className="form-label">
@@ -193,8 +209,22 @@ export default function LogVisit() {
                             accept="image"
                             label="Upload Visit Photo"
                             value={photoFile}
+                            multiple={true}
                             error={photoError}
-                            onFileSelect={(file, err) => { setPhotoFile(file); setPhotoError(err || ''); }}
+                            onFileSelect={(files, err) => {
+                                if (files.length === 0) {
+                                    // Remove all case
+                                    setPhotoFile([]);
+                                } else {
+                                    // Add new files
+                                    setPhotoFile(prev => [
+                                        ...prev,
+                                        ...files
+                                    ]);
+                                }
+
+                                setPhotoError(err || '');
+                            }}
                         />
                     </div>
 

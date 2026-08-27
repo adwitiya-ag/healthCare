@@ -74,7 +74,7 @@ app.use("/api/v1/preference", doctorProductPreferenceRouter);
 
 app.use("/api/v1/location", locationRouter)
 
-app.use("/api/v1/photo", visitProofRouter)
+app.use("/api/v1/visit-proof", visitProofRouter)
 
 //which sample to which doctor by which MR
 app.use("/api/v1/sample-distribution", sampleDistributionRouter);

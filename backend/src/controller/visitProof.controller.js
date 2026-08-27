@@ -8,12 +8,19 @@ import mongoose from "mongoose";
 
 const addVisitProof = asyncHandler(async (req, res) => {
 
-    const { latitude, longitude, accuracy, Notes } = req.body;
+    const { doctorId, chemistId, latitude, longitude, accuracy, Notes } = req.body;
 
     const MRId = req.user._id;
 
     if (latitude === undefined || longitude === undefined || accuracy === undefined) {
         throw new ApiError(400,"latitude, longitude and accuracy are required");
+    }
+
+    if (!doctorId && !chemistId) {
+        throw new ApiError(
+            400,
+            "Either doctorId or chemistId is required"
+        );
     }
 
     // Check whether photos were uploaded
@@ -38,8 +45,7 @@ const addVisitProof = asyncHandler(async (req, res) => {
     }
 
     // Create VisitProof
-    const visitProof = await VisitProof.create({
-
+    const visitData = {
         MRId,
 
         Photos: uploadedPhotos,
@@ -51,8 +57,20 @@ const addVisitProof = asyncHandler(async (req, res) => {
         },
 
         Notes: Notes || ""
+    };
 
-    });
+
+    // Add doctor or chemist dynamically
+    if (doctorId) {
+        visitData.DoctorId = doctorId;
+    }
+
+    if (chemistId) {
+        visitData.ChemistId = chemistId;
+    }
+
+
+    const visitProof = await VisitProof.create(visitData);
 
 
     return res
@@ -77,7 +95,11 @@ const getAllVisitProof = asyncHandler(async (req, res) => {
     else if (req.user.role === "MANAGER") {
         visitProofs = await VisitProof
             .find()
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .populate("MRId", "firstName lastName _id regNo employeeId")
+            .populate("DoctorId")
+            .populate("ChemistId")
+            
     }
 
     else {

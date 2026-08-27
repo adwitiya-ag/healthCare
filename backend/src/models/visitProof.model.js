@@ -5,8 +5,20 @@ const visitProofSchema = new Schema(
     {
         MRId: {
             type: Schema.Types.ObjectId,
-            ref: "MR",
+            ref: "User",
             required: true
+        },
+
+        DoctorId: {
+            type: Schema.Types.ObjectId,
+            ref: "Doctor",
+            default: null
+        },
+
+        ChemistId: {
+            type: Schema.Types.ObjectId,
+            ref: "Chemist",
+            default: null
         },
 
         Photos: [
@@ -49,6 +61,20 @@ const visitProofSchema = new Schema(
     }
 );
 
+visitProofSchema.pre("validate", function(next){
+
+    if(!this.DoctorId && !this.ChemistId){
+        return next(
+            new Error("Either DoctorId or ChemistId is required")
+        );
+    }
+
+    if (this.DoctorId && this.ChemistId) {
+        return next(
+            new Error("Only one of DoctorId or ChemistId should be provided")
+        );
+    }
+})
 
 // indexes for finding visits of a particular MR
 visitProofSchema.index({ MRId: 1 });

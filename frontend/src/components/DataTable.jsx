@@ -34,7 +34,7 @@ export default function DataTable({
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const pageData = sorted.slice((page - 1) * pageSize, page * pageSize);
 
-  const SortIcon = ({ key: k }) => {
+  const SortIcon = ({ colkey: k }) => {
     if (sortKey !== k) return <ChevronsUpDown className="w-3 h-3 opacity-40" />;
     return sortDir === 'asc' ? <ChevronUp className="w-3 h-3 text-primary-600" /> : <ChevronDown className="w-3 h-3 text-primary-600" />;
   };
@@ -59,7 +59,7 @@ export default function DataTable({
                 <th key={col.key} onClick={col.sortable !== false ? () => handleSort(col.key) : undefined} className={col.sortable === false ? 'cursor-default' : ''}>
                   <span className="flex items-center gap-1">
                     {col.label}
-                    {col.sortable !== false && <SortIcon key={col.key} />}
+                    {col.sortable !== false && <SortIcon colkey={col.key} />}
                   </span>
                 </th>
               ))}
