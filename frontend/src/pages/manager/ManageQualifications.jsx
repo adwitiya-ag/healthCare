@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,32 +6,64 @@ import { z } from 'zod';
 import PageHeader from '../../components/PageHeader';
 import Modal from '../../components/Modal';
 import StatusBadge from '../../components/StatusBadge';
-import { QUALIFICATIONS as INIT_QUALS } from '../../mocks/mockEnums';
+import { doctorsApi } from '../../api/doctorsApi';
 
 const schema = z.object({ label: z.string().min(1, 'Label is required') });
 
 export default function ManageQualifications() {
-  const [items, setItems] = useState(INIT_QUALS);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [qualifications, setQualifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm({ resolver: zodResolver(schema) });
+
+  const fetchQualifications = async () => {
+    setLoading(true);
+    try {
+      const response = await doctorsApi.getQualifications();
+      const mapped = (response.data || []).map((q) => ({
+        id: q._id,
+        label: q.name,
+        active: q.isActive,
+      }));
+      setQualifications(mapped);
+    } catch (error) {
+      console.error('Error fetching qualifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => { fetchQualifications(); }, []);
 
   const openAdd = () => { setEditing(null); reset({ label: '' }); setModalOpen(true); };
   const openEdit = (item) => { setEditing(item); reset({ label: item.label }); setModalOpen(true); };
 
   const onSubmit = async (data) => {
-    // await doctorsapi.addQualification(name)
-    await new Promise(r => setTimeout(r, 200));
-    if (editing) {
-      setItems(prev => prev.map(i => i.id === editing.id ? { ...i, ...data } : i));
-    } else {
-      setItems(prev => [...prev, { id: Date.now(), label: data.label, active: true }]);
+    try {
+      if (editing) {
+        await doctorsApi.updateQualification(editing.id, data.label);
+      } else {
+        await doctorsApi.addQualification(data.label);
+      }
+      await fetchQualifications();
+      setModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
     }
-    setModalOpen(false);
   };
 
-  const toggle = (id) => setItems(prev => prev.map(i => i.id === id ? { ...i, active: !i.active } : i));
+  const toggle = async (id) => {
+    try {
+      await doctorsApi.toggleQualification(id);
+      await fetchQualifications();
+    } catch (error) {
+      console.error(error);
+      alert(error.message);
+    }
+  };
 
   return (
     <div className="animate-fade-in">
@@ -56,7 +88,9 @@ export default function ManageQualifications() {
               </tr>
             </thead>
             <tbody>
-              {items.map(item => (
+              {loading && <tr><td colSpan={3}>Loading…</td></tr>}
+              {!loading && qualifications.length === 0 && <tr><td colSpan={3}>No qualifications found</td></tr>}
+              {qualifications.map((item) => (
                 <tr key={item.id}>
                   <td className="font-medium">{item.label}</td>
                   <td><StatusBadge active={item.active} /></td>
@@ -68,8 +102,7 @@ export default function ManageQualifications() {
                       <button id={`toggle-qual-${item.id}`} onClick={() => toggle(item.id)} className="btn-ghost btn-sm">
                         {item.active
                           ? <ToggleRight className="w-5 h-5 text-success" />
-                          : <ToggleLeft className="w-5 h-5 text-slate-400" />
-                        }
+                          : <ToggleLeft className="w-5 h-5 text-slate-400" />}
                       </button>
                     </div>
                   </td>

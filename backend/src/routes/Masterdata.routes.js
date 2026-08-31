@@ -1,12 +1,18 @@
 import { Router } from "express";
 import {
   createDoctorQualification,
+  deleteDoctorQualification,
   getDoctorQualifications,
-} from "../controller/doctorQualification.controller.js";
+  toggleDoctorQualification,
+  updateDoctorQualification,
+} from "../controller/Doctorqualification.controller.js";
 import {
   createDoctorSpecialization,
+  deleteDoctorSpecialization,
   getDoctorSpecializations,
-} from "../controller/doctorSpecialization.controller.js";
+  toggleDoctorSpecialization,
+  updateDoctorSpecialization,
+} from "../controller/Doctorspecialization.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { verifyUser } from "../middleware/verifyUser.middleware.js";
 import { authorizeRoles } from "../middleware/role.middleware.js";
@@ -28,6 +34,36 @@ router
     createDoctorQualification
   );
 
+// update doctor qualification
+router
+  .route("/doctor-qualification/:id")
+  .patch(
+    verifyJWT,
+    verifyUser,
+    authorizeRoles("ADMIN","MANAGER"),
+    updateDoctorQualification
+  );
+
+// delete doctor qualification
+router
+  .route("/doctor-qualification/:id")
+  .delete(
+    verifyJWT,
+    verifyUser,
+    authorizeRoles("ADMIN","MANAGER"),
+    deleteDoctorQualification
+  );
+
+// toggole active inactive
+router
+  .route("/doctor-qualification/:id/toggle")
+  .patch(
+    verifyJWT,
+    verifyUser,
+    authorizeRoles("ADMIN","MANAGER"),
+    toggleDoctorQualification
+  );
+
 // ---------------- Doctor Specialization ----------------
 
 // GET /doctor-specializations?isActive=  -> populate dropdown
@@ -43,4 +79,33 @@ router
     createDoctorSpecialization
   );
 
+// update doctor specialization
+router
+  .route("/doctor-specialization/:id")
+  .patch(
+    verifyJWT,
+    verifyUser,
+    authorizeRoles("ADMIN","MANAGER"),
+    updateDoctorSpecialization
+  );
+
+// delete specialization
+router
+  .route("/doctor-specialization/:id")
+  .delete(
+    verifyJWT,
+    verifyUser,
+    authorizeRoles("ADMIN","MANAGER"),
+    deleteDoctorSpecialization
+  );
+
+// toggle active inactive
+router
+  .route("/doctor-specialization/:id/toggle")
+  .patch(
+    verifyJWT,
+    verifyUser,
+    authorizeRoles("ADMIN","MANAGER"),
+    toggleDoctorSpecialization
+  );
 export default router;

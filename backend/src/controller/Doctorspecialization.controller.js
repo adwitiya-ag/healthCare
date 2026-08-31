@@ -3,8 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// @route   POST /doctor-specialization
-// @desc    Create a new doctor specialization (e.g. Ortho, ENT)
+// create a new doctor specialization
 const createDoctorSpecialization = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
@@ -34,8 +33,7 @@ const createDoctorSpecialization = asyncHandler(async (req, res) => {
     );
 });
 
-// @route   GET /doctor-specializations?isActive=
-// @desc    Get all doctor specializations (for dropdown population)
+// fetch all doctor specializations
 const getDoctorSpecializations = asyncHandler(async (req, res) => {
   const { isActive } = req.query;
 
@@ -65,4 +63,103 @@ const getDoctorSpecializations = asyncHandler(async (req, res) => {
     );
 });
 
-export { createDoctorSpecialization, getDoctorSpecializations };
+// update a Specialization information
+const updateDoctorSpecialization = asyncHandler(async (req, res) =>{
+  const { id } = req.params;
+  const { name, isActive} = req.body;
+  
+  // find the specialization which is wanted to be updated
+  const specialization = await DoctorSpecialization.findById(id);
+
+  if(!specialization){
+    throw new ApiError(404, "Specialization is not found");
+  }
+
+  if (!specialization.isActive) {
+    throw new ApiError(
+      400,
+      "Inactive specialization cannot be updated"
+    );
+    }
+
+  // for every field that was actually sent, validate it (if it's a foreign key) and update the doctor object in memory
+  if(name && name.trim()){
+     specialization.name = name.trim();
+  }
+ 
+  if (isActive !== undefined) {
+    specialization.isActive = isActive;
+  }
+
+  //  check the duplicates 
+  const duplicate = await DoctorSpecialization.findOne({
+    _id: { $ne: id }, // exclude the specialization we're currently updating
+    name: specialization.name,
+  });
+ 
+  if (duplicate) {
+    throw new ApiError(409, "Another doctor with these exact details already exists");
+  }
+ 
+  // save the changes
+  await specialization.save();
+ 
+  return res
+    .status(200)
+    .json(new ApiResponse(200, specialization, "Specialization updated successfully"));
+} );
+
+
+// delete a Specialization information
+
+const deleteDoctorSpecialization = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const specialization = await DoctorSpecialization.findById(id);
+
+  if(!specialization){
+    throw new ApiError(404, "Specialization is not found");
+  }
+
+  specialization.isActive = false;
+  await specialization.save();
+
+  return res.status(200).json(new ApiResponse(200, specialization, "Specialization deactivated successfully"));
+});
+
+// for toggle back means -> inactive to active and active to inactive
+const toggleDoctorSpecialization = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const specialization = await DoctorSpecialization.findById(id);
+
+  if (!specialization) {
+    throw new ApiError(404, "Specialization is not found");
+  }
+
+  if (!specialization.isActive) {
+  throw new ApiError(
+    400,
+    "Inactive specialization cannot be updated"
+  );
+  }
+
+  specialization.isActive = !specialization.isActive;
+
+  await specialization.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        specialization,
+        specialization.isActive
+          ? "Specialization activated successfully"
+          : "Specialization deactivated successfully"
+      )
+    );
+});
+
+
+export { createDoctorSpecialization, getDoctorSpecializations, updateDoctorSpecialization, deleteDoctorSpecialization, toggleDoctorSpecialization };

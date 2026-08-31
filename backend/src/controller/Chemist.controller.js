@@ -7,16 +7,11 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateRefExists } from "../utils/validateRefExists.js";
 import { generateChemistId } from "../utils/counterUtils.js";
 
-// ------------------------------------------------------------------
-// @route   POST /chemist
-// @desc    Take input from frontend (chemistName, chemistType,
-//          areaId, cityId) -> validate IDs from DB -> check if
-//          entity already exists -> insert if not
-// ------------------------------------------------------------------
+// create a new chemist
 const createChemist = asyncHandler(async (req, res) => {
   const { chemistName, chemistType, areaId, cityId } = req.body;
 
-  // 1. basic input validation
+  // basic input validation
   if (!chemistName || !chemistName.trim() || !chemistType || !areaId || !cityId) {
     throw new ApiError(
       400,
@@ -33,11 +28,11 @@ const createChemist = asyncHandler(async (req, res) => {
     );
   }
 
-  // 2. validate foreign key IDs actually exist (and are active) in DB
+  // validate foreign key IDs actually exist (and are active) in DB
   await validateRefExists(City, cityId, "City");
   await validateRefExists(Area, areaId, "Area");
 
-  // 3. check if this exact chemist entry already exists in DB
+  // check if this exact chemist entry already exists in DB
   const existingChemist = await Chemist.findOne({
     chemistName: chemistName.trim(),
     cityId,
@@ -51,7 +46,7 @@ const createChemist = asyncHandler(async (req, res) => {
 
   const chemistId = await generateChemistId();
 
-  // 4. else insert into DB
+  // else insert into DB
   const chemist = await Chemist.create({
     chemistId: chemistId,
     chemistName: chemistName.trim(),
@@ -65,12 +60,7 @@ const createChemist = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, chemist, "Chemist added successfully"));
 });
 
-// ------------------------------------------------------------------
-// @route   GET /chemists?cityId=&areaId=&chemistType=
-// @desc    Receive params from frontend -> validate IDs from DB
-//          -> fetch matching records only -> if empty, return
-//          "No such Chemist found" -> else return the list to client
-// ------------------------------------------------------------------
+// fetch all chemists
 const getChemists = asyncHandler(async (req, res) => {
   const { cityId, areaId, chemistType } = req.query;
 
@@ -118,4 +108,84 @@ const getChemists = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, chemists, "Chemists fetched successfully"));
 });
 
-export { createChemist, getChemists };
+// update a Chemist
+const updateChemist = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    chemistName,
+    cityId,
+    areaId,
+    chemistType,
+    isActive,
+  } = req.body;
+
+  // find the chemist which is wanted to be updated
+  const chemist = await Chemist.findById(id);
+
+  if (!chemist) {
+    throw new ApiError(404, "Chemist not found");
+  }
+
+  // for every field that was actually sent, validate it (if it's a foreign key) and update the chemist object in memory
+  if (chemistName && chemistName.trim()) {
+    chemist.chemistName = chemistName.trim();
+  }
+
+  if (cityId) {
+    await validateRefExists(City, cityId, "City");
+    chemist.cityId = cityId;
+  }
+
+  if (areaId) {
+    await validateRefExists(Area, areaId, "Area");
+    chemist.areaId = areaId;
+  }
+  
+ if(chemistType){
+    chemist.chemistType = chemistType;
+ }
+
+  if (isActive !== undefined) {
+    chemist.isActive = isActive;
+  }
+
+  // check the duplicates
+  const duplicate = await Chemist.findOne({
+    _id: { $ne: id }, // exclude the chemist we're currently updating
+    chemistName: chemist.chemistName,
+    cityId: chemist.cityId,
+    areaId: chemist.areaId,
+    chemistType: chemist.chemistType,
+  });
+
+  if (duplicate) {
+    throw new ApiError(409, "Another chemist with these exact details already exists");
+  }
+
+  // Step 4: save the changes
+  await chemist.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, chemist, "Chemist updated successfully"));
+});
+
+// delete a chemist
+const deleteChemist = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const chemist = await Chemist.findById(id);
+
+  if (!chemist) {
+    throw new ApiError(404, "Chemist not found");
+  }
+
+  chemist.isActive = false;
+  await chemist.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, chemist, "Chemist deactivated successfully"));
+});
+
+export { createChemist, getChemists, updateChemist, deleteChemist };

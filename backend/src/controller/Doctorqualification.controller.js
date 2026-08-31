@@ -3,8 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 
-// @route   POST /doctor-qualification
-// @desc    Create a new doctor qualification (e.g. MBBS, MD)
+// create a new doctor qualification
 const createDoctorQualification = asyncHandler(async (req, res) => {
   const { name } = req.body;
 
@@ -30,8 +29,7 @@ const createDoctorQualification = asyncHandler(async (req, res) => {
     );
 });
 
-// @route   GET /doctor-qualifications?isActive=
-// @desc    Get all doctor qualifications (for dropdown population)
+// fetch all doctor qualifications
 const getDoctorQualifications = asyncHandler(async (req, res) => {
   const { isActive } = req.query;
 
@@ -61,4 +59,98 @@ const getDoctorQualifications = asyncHandler(async (req, res) => {
     );
 });
 
-export { createDoctorQualification, getDoctorQualifications };
+
+// update a qualification information
+const updateDoctorQualification = asyncHandler(async (req, res) =>{
+  const { id } = req.params;
+  const { name, isActive} = req.body;
+  
+  // find the doctor which is wanted to be updated
+  const qualification = await DoctorQualification.findById(id);
+
+  if(!qualification){
+    throw new ApiError(404, "Qualification is not found");
+  }
+
+  if (!qualification.isActive) {
+  throw new ApiError(
+    400,
+    "Inactive qualification cannot be updated"
+  );
+  }
+
+  // for every field that was actually sent, validate it (if it's a foreign key) and update the doctor object in memory
+  if(name && name.trim()){
+     qualification.name = name.trim();
+  }
+ 
+  if (isActive !== undefined) {
+    qualification.isActive = isActive;
+  }
+
+  //  check the duplicates
+  const duplicate = await DoctorQualification.findOne({
+    _id: { $ne: id }, // exclude the qualification we're currently updating
+    name: qualification.name,
+  });
+ 
+  if (duplicate) {
+    throw new ApiError(409, "Another doctor with these exact details already exists");
+  }
+ 
+  // save the changes
+  await qualification.save();
+ 
+  return res
+    .status(200)
+    .json(new ApiResponse(200, qualification, "Qualification updated successfully"));
+} );
+
+
+// delete a qualification information
+
+const deleteDoctorQualification = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const qualification = await DoctorQualification.findById(id);
+
+  if(!qualification){
+    throw new ApiError(404, "Qualification is not found");
+  }
+
+  qualification.isActive = false;
+  await qualification.save();
+
+  return res.status(200).json(new ApiResponse(200, qualification, "Qualification deactivated successfully"));
+});
+
+// for toggle back means -> inactive to active and active to inactive
+const toggleDoctorQualification = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const qualification = await DoctorQualification.findById(id);
+
+  if (!qualification) {
+    throw new ApiError(404, "Qualification is not found");
+  }
+
+  // for switching active to inactive and vice versa
+  qualification.isActive = !qualification.isActive;
+
+  await qualification.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        qualification,
+        qualification.isActive
+          ? "Qualification activated successfully"
+          : "Qualification deactivated successfully"
+      )
+    );
+});
+
+
+export { createDoctorQualification, getDoctorQualifications, updateDoctorQualification, deleteDoctorQualification,toggleDoctorQualification };

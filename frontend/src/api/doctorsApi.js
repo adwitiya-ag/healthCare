@@ -27,8 +27,6 @@ export const doctorsApi = {
     return response.json();
   },
 
-  
-
   async getSpecialization() {
     const response = await fetch(`${BASE_URL}/doctor-specializations`);
     if (!response.ok) throw new Error('Failed to fetch Specialization');
@@ -41,6 +39,84 @@ export const doctorsApi = {
     const response = await fetch(url);
     if (!response.ok) throw new Error('Failed to fetch areas');
     return response.json();
+  },
+
+   async addQualification(name) {
+    const response = await fetch(
+      `${BASE_URL}/doctor-qualification`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ name }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+
+      throw new Error(
+        err.message || 'Failed to add qualification'
+      );
+    }
+
+    const json = await response.json();
+
+    return json.data;
+  },
+
+  // UPDATE qualification
+  async updateQualification(id, name) {
+    const response = await fetch(
+      `${BASE_URL}/doctor-qualification/${id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          name: name.trim(),
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+
+      throw new Error(
+        err.message || 'Failed to update qualification'
+      );
+    }
+
+    const json = await response.json();
+
+    return json.data;
+  },
+
+  // DEACTIVATE qualification
+  async toggleQualification(id) {
+    const response = await fetch(
+      `${BASE_URL}/doctor-qualification/${id}/toggle`,
+      {
+        method: 'PATCH',
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+
+      throw new Error(
+        err.message || 'Failed to deactivate qualification'
+      );
+    }
+
+    const json = await response.json();
+
+    return json.data;
   },
 
   // REWRITTEN — real API call, using *Id filter keys to match backend query params

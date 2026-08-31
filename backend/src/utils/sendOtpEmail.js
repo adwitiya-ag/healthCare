@@ -1,7 +1,7 @@
 //import {Resend} from "resend";
-//import nodemailer from "nodemailer";
-
 import nodemailer from "nodemailer";
+
+// import nodemailer from "nodemailer";
 import { ApiError } from "./ApiError.js";
 import dotenv from "dotenv" ;
 

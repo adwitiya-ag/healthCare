@@ -9,12 +9,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { validateRefExists } from "../utils/validateRefExists.js";
 import { generateDoctorId } from "../utils/counterUtils.js";
 
-// ------------------------------------------------------------------
-// @route   POST /doctor
-// @desc    Take input from frontend (doctorName, qualificationId,
-//          specializationId, areaId, cityId) -> validate IDs from DB
-//          -> check if entity already exists -> insert if not
-// ------------------------------------------------------------------
+// create a new doctor
 const createDoctor = asyncHandler(async (req, res) => {
   const { doctorName, qualificationId, specializationId, areaId, cityId } =
     req.body;
@@ -78,12 +73,7 @@ const createDoctor = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201, doctor, "Doctor added successfully"));
 });
 
-// ------------------------------------------------------------------
-// @route   GET /doctors?cityId=&areaId=&specializationId=&qualificationId=
-// @desc    Receive params from frontend -> validate IDs from DB
-//          -> fetch matching records only -> if empty, return
-//          "No such Doctor found" -> else return the list to client
-// ------------------------------------------------------------------
+// fetch all doctors
 const getDoctors = asyncHandler(async (req, res) => {
   const { cityId, areaId, qualificationId, specializationId } = req.query;
 
@@ -141,4 +131,100 @@ const getDoctors = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, doctors, "Doctors fetched successfully"));
 });
 
-export { createDoctor, getDoctors };
+// update a doctor
+const updateDoctor = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const {
+    doctorName,
+    cityId,
+    areaId,
+    qualificationId,
+    specializationId,
+    isActive,
+  } = req.body;
+
+  // find the doctor which is wanted to be updated
+  const doctor = await Doctor.findById(id);
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor not found");
+  }
+
+  // for every field that was actually sent, validate it (if it's a foreign key) and update the doctor object in memory
+  if (doctorName && doctorName.trim()) {
+    doctor.doctorName = doctorName.trim();
+  }
+
+  if (cityId) {
+    await validateRefExists(City, cityId, "City");
+    doctor.cityId = cityId;
+  }
+
+  if (areaId) {
+    await validateRefExists(Area, areaId, "Area");
+    doctor.areaId = areaId;
+  }
+
+  if (qualificationId) {
+    await validateRefExists(
+      DoctorQualification,
+      qualificationId,
+      "Doctor Qualification"
+    );
+    doctor.qualificationId = qualificationId;
+  }
+
+  if (specializationId) {
+    await validateRefExists(
+      DoctorSpecialization,
+      specializationId,
+      "Doctor Specialization"
+    );
+    doctor.specializationId = specializationId;
+  }
+
+  if (isActive !== undefined) {
+    doctor.isActive = isActive;
+  }
+
+  // check the duplicates
+  const duplicate = await Doctor.findOne({
+    _id: { $ne: id }, // exclude the doctor we're currently updating
+    doctorName: doctor.doctorName,
+    cityId: doctor.cityId,
+    areaId: doctor.areaId,
+    qualificationId: doctor.qualificationId,
+    specializationId: doctor.specializationId,
+  });
+
+  if (duplicate) {
+    throw new ApiError(409, "Another doctor with these exact details already exists");
+  }
+
+  // save the changes
+  await doctor.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, doctor, "Doctor updated successfully"));
+});
+
+// delete a doctor
+const deleteDoctor = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const doctor = await Doctor.findById(id);
+
+  if (!doctor) {
+    throw new ApiError(404, "Doctor not found");
+  }
+
+  doctor.isActive = false;
+  await doctor.save();
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, doctor, "Doctor deactivated successfully"));
+});
+
+export { createDoctor, getDoctors, updateDoctor, deleteDoctor };
