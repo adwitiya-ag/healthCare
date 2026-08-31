@@ -27,7 +27,7 @@ import cityRouter from "./src/routes/city.routes.js";
 
 import areaRouter from "./src/routes/area.routes.js";
 
-import masterDataRouter from "./src/routes/masterData.routes.js";
+import masterDataRouter from "./src/routes/Masterdata.routes.js";
 
 import doctorRouter from "./src/routes/doctor.routes.js";
 
