@@ -1,238 +1,182 @@
-import { useState, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { MapPin, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import { Plus, ZoomIn, ChevronLeft, ChevronRight, MapPin } from 'lucide-react';
 import PageHeader from '../../components/PageHeader';
-import FileUpload from '../../components/FileUpload';
-import { doctorsApi } from '../../api/doctorsApi';
-import { chemistsApi } from '../../api/chemistsApi';
+import DataTable from '../../components/DataTable';
+import Modal from '../../components/Modal';
+import LogVisitForm from '../visits/LogVisitForm';
 import { visitsApi } from '../../api/visitsApi';
-import { VISIT_TYPES } from '../../mocks/mockEnums';
-import { useAuth } from '../../context/AuthContext';
 
-const schema = z.object({
-    entityType: z.enum(['doctor', 'chemist']),
-    entityId: z.string().min(1, 'Select a doctor or chemist'),
-    notes: z.string().min(5, 'Notes must be at least 5 characters'),
-});
+function mapsLink(lat, lng) {
+    if (lat == null || lng == null) return null;
+    return `https://www.google.com/maps?q=${lat},${lng}`;
+}
 
-export default function LogVisit() {
-    const { user } = useAuth();
-    const [entityType, setEntityType] = useState('doctor');
-    const [doctors, setDoctors] = useState([]);
-    const [chemists, setChemists] = useState([]);
-    const [photoFile, setPhotoFile] = useState([]);
-    const [photoError, setPhotoError] = useState('');
-    const [success, setSuccess] = useState(false);
+// Same slideshow cell as VisitReview.jsx — consider extracting this
+// into a shared component so both pages import one copy.
+function VisitProofCell({ row }) {
+    const [open, setOpen] = useState(false);
+    const [index, setIndex] = useState(0);
 
-    const [location, setLocation] = useState(null)
+    const images = row.photos?.length ? row.photos : row.photo ? [row.photo] : [];
 
-    const { register, handleSubmit, setValue, watch, reset, formState: { errors, isSubmitting } } = useForm({
-        resolver: zodResolver(schema),
-        defaultValues: { entityType: 'doctor', entityId: '', visitType: '', notes: '', location: '' },
-    });
+    const goPrev = (e) => { e.stopPropagation(); setIndex((i) => (i - 1 + images.length) % images.length); };
+    const goNext = (e) => { e.stopPropagation(); setIndex((i) => (i + 1) % images.length); };
 
-    const getAddress = async(lat,lng)=>{
-        const data = await visitsApi.getAddress({lat, lng})
-        return data;
-    };
-
-    useEffect(() => {
-        doctorsApi.getAll({ mrId: user?.id }).then(setDoctors);
-        chemistsApi.getAll({ mrId: user?.id }).then(setChemists);
-
-        if(!navigator.geolocation){
-            console.log("Location not supported");
-            return;
-        }
-
-        const watchId = navigator.geolocation.watchPosition(
-        async (position) => {
-
-            const coords = {
-                latitude: position.coords.latitude,
-                longitude: position.coords.longitude,
-                accuracy: position.coords.accuracy
-            };
-
-            setLocation(coords);
-            console.log(coords.accuracy)
-
-            // convert coordinates to address
-            const address = await getAddress(
-                coords.latitude,
-                coords.longitude
-            );
-
-
-            if(address){
-
-                setValue(
-                    "location",
-                    address.address
-                );
-            }
-        },
-        (err) => {
-            console.log(err.message);
-        },
-        {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 5000
-        }
-    )
-    return () => {
-        navigator.geolocation.clearWatch(watchId);
-    };
-    }, []);
-
-    const watchedType = watch('entityType');
-    const entities = watchedType === 'doctor' ? doctors : chemists;
-
-    const onSubmit = async (data) => {
-        if (!photoFile || photoFile.length === 0) {
-            setPhotoError("Photo proof is required");
-            return;
-        }
-
-        if(!location){
-            alert("Location not detected")
-            return;
-        }
-
-        const formData = new FormData()
-
-        if(data.entityType === "doctor"){
-            formData.append("doctorId", data.entityId)
-        }else{
-            formData.append("chemistId", data.entityId)
-        }
-
-        // Location
-        formData.append("latitude", location.latitude);
-        formData.append("longitude", location.longitude);
-        formData.append("accuracy", location.accuracy);
-
-        // Notes
-        formData.append("Notes", data.notes);
-
-        // Photos
-        photoFile.forEach((file) => {
-            formData.append("photos", file);
-        });
-
-        await visitsApi.addVisitProof(formData);
-
-        setSuccess(true);
-
-        setTimeout(() => {
-            setSuccess(false);
-            reset();
-            setPhotoFile([]);
-            setLocation(null);
-        }, 3000);
-    };
-
-    if (success) {
-        return (
-            <div className="flex flex-col items-center justify-center py-24">
-                <CheckCircle className="w-20 h-20 text-success mb-4" />
-                <h2 className="text-2xl font-bold text-slate-800 mb-2">Visit Logged!</h2>
-                <p className="text-slate-500">Your visit has been recorded successfully.</p>
-            </div>
-        );
-    }
+    const link = mapsLink(row.latitude, row.longitude);
 
     return (
-        <div className="animate-fade-in max-w-2xl">
-            <PageHeader title="Log a Visit" subtitle="Record your field visit details" />
+        <>
+            <button id={`view-photo-${row.id}`} onClick={() => { setIndex(0); setOpen(true); }} className="relative group">
+                <img src={images[0]} alt="Visit proof" className="w-12 h-10 object-cover rounded-lg border border-surface-border group-hover:opacity-80 transition-opacity" />
+                {images.length > 1 && (
+                    <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-[10px] leading-none rounded-full px-1.5 py-0.5">
+                        {images.length}
+                    </span>
+                )}
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30 rounded-lg">
+                    <ZoomIn className="w-4 h-4 text-white" />
+                </div>
+            </button>
 
-            <div className="card p-6">
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" id="log-visit-form">
-                    {/* Entity type tabs */}
-                    <div>
-                        <label className="form-label">Visit Type</label>
-                        <div className="flex gap-2 p-1 bg-slate-100 rounded-xl w-fit">
-                            {['doctor', 'chemist'].map(type => (
-                                <button
-                                    key={type}
-                                    type="button"
-                                    id={`entity-type-${type}`}
-                                    onClick={() => { setEntityType(type); setValue('entityType', type); setValue('entityId', ''); }}
-                                    className={`px-5 py-2 rounded-lg text-sm font-medium transition-all capitalize ${entityType === type ? 'bg-white shadow-sm text-primary-600' : 'text-slate-500 hover:text-slate-700'}`}
-                                >
-                                    {type === 'doctor' ? '👨‍⚕️ Doctor' : '💊 Chemist'}
+            <Modal isOpen={open} onClose={() => setOpen(false)} title={`Visit Proof — ${row.entityName}`} size="lg" id={`photo-modal-${row.id}`}>
+                <div className="space-y-4">
+                    <div className="relative">
+                        <img src={images[index]} alt={`Visit proof ${index + 1} of ${images.length}`} className="w-full rounded-xl object-contain max-h-96 bg-black/5" />
+                        {images.length > 1 && (
+                            <>
+                                <button onClick={goPrev} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors" aria-label="Previous photo">
+                                    <ChevronLeft className="w-4 h-4" />
+                                </button>
+                                <button onClick={goNext} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition-colors" aria-label="Next photo">
+                                    <ChevronRight className="w-4 h-4" />
+                                </button>
+                                <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                                    {images.map((_, i) => (
+                                        <span key={i} className={`w-1.5 h-1.5 rounded-full ${i === index ? 'bg-white' : 'bg-white/40'}`} />
+                                    ))}
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {images.length > 1 && (
+                        <div className="flex gap-2 overflow-x-auto pb-1">
+                            {images.map((src, i) => (
+                                <button key={i} onClick={() => setIndex(i)} className={`shrink-0 rounded-lg overflow-hidden border-2 transition-colors ${i === index ? 'border-primary-500' : 'border-transparent'}`}>
+                                    <img src={src} alt={`Thumbnail ${i + 1}`} className="w-14 h-11 object-cover" />
                                 </button>
                             ))}
                         </div>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <p className="text-slate-400 text-xs mb-0.5">Entity</p>
+                            <p className="font-medium">{row.entityName}</p>
+                        </div>
+                        <div>
+                            <p className="text-slate-400 text-xs mb-0.5">Visit Type</p>
+                            <p className="font-medium">{row.visitType}</p>
+                        </div>
+                        <div>
+                            <p className="text-slate-400 text-xs mb-0.5">Date</p>
+                            <p className="font-medium">{row.date}</p>
+                        </div>
+                        <div className="col-span-2">
+                            <p className="text-slate-400 text-xs mb-0.5">Location</p>
+                            {link ? (
+                                <a href={link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 font-medium text-primary-500 hover:underline">
+                                    <MapPin className="w-3.5 h-3.5" />
+                                    {row.address || `${row.latitude}, ${row.longitude}`}
+                                </a>
+                            ) : (
+                                <p className="font-medium text-slate-400">Not available</p>
+                            )}
+                        </div>
+                        <div className="col-span-2">
+                            <p className="text-slate-400 text-xs mb-0.5">Notes</p>
+                            <p className="font-medium">{row.notes || '—'}</p>
+                        </div>
                     </div>
+                </div>
+            </Modal>
+        </>
+    );
+}
 
-                    <div>
-                        <label className="form-label">Select {entityType === 'doctor' ? 'Doctor' : 'Chemist'} *</label>
-                        <select id="visit-entity" {...register('entityId')} className={errors.entityId ? 'form-input-error form-select' : 'form-select'}>
-                            <option value="">Choose {entityType}…</option>
-                            {entities.map(e => <option key={e.id} value={e.id}>{e.name} — {e.city}</option>)}
-                        </select>
-                        {errors.entityId && <p className="form-error">⚠ {errors.entityId.message}</p>}
-                    </div>
+const COLUMNS = [
+    { key: 'date', label: 'Date' },
+    { key: 'entityName', label: 'Entity' },
+    { key: 'entityType', label: 'Type', render: (v) => <span className={`badge ${v === 'doctor' ? 'badge-info' : 'badge-warning'}`}>{v}</span> },
+    { key: 'visitType', label: 'Visit Type' },
+    { key: 'photo', label: 'Photo Proof', sortable: false, render: (_, row) => <VisitProofCell row={row} /> },
+];
 
-                    {/* <div>
-                        <label className="form-label">Visit Category *</label>
-                        <select id="visit-type" {...register('visitType')} className={errors.visitType ? 'form-input-error form-select' : 'form-select'}>
-                            <option value="">Select visit type</option>
-                            {VISIT_TYPES.map(v => <option key={v.id} value={v.label}>{v.label}</option>)}
-                        </select>
-                        {errors.visitType && <p className="form-error">⚠ {errors.visitType.message}</p>}
-                    </div> */}
+export default function MRVisitHistory() {
+    const { mrId } = useParams(); // swap for props.mrId / context if you're not routing this way
+    const [visits, setVisits] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [mrName, setMrName] = useState('');
+    const [modalOpen, setModalOpen] = useState(false);
 
-                    <div>
-                        <label className="form-label">
-                            <MapPin className="w-3.5 h-3.5 inline mr-1 text-primary-500" />
-                            Location (auto-detected)
-                        </label>
-                        <input id="visit-location" type="text" {...register('location')} className={errors.location ? 'form-input-error' : 'form-input'} />
-                        {errors.location && <p className="form-error">⚠ {errors.location.message}</p>}
-                    </div>
+    const fetchVisits = useCallback(async () => {
+        setLoading(true);
 
-                    <div>
-                        <label className="form-label">Notes *</label>
-                        <textarea id="visit-notes" rows={4} {...register('notes')} className={errors.notes ? 'form-input-error' : 'form-input'} placeholder="Describe the visit, topics discussed, next steps…" />
-                        {errors.notes && <p className="form-error">⚠ {errors.notes.message}</p>}
-                    </div>
+        const getAddress = async (lat, lng) => {
+            if (!lat || !lng) return { address: 'Not available' };
+            return visitsApi.getAddress({ lat, lng });
+        };
 
-                    <div>
-                        <label className="form-label">Photo Proof * (JPG/PNG only)</label>
-                        <FileUpload
-                            id="visit-photo"
-                            accept="image"
-                            label="Upload Visit Photo"
-                            value={photoFile}
-                            multiple={true}
-                            error={photoError}
-                            onFileSelect={(files, err) => {
-                                if (files.length === 0) {
-                                    // Remove all case
-                                    setPhotoFile([]);
-                                } else {
-                                    // Add new files
-                                    setPhotoFile(prev => [
-                                        ...prev,
-                                        ...files
-                                    ]);
-                                }
+        const data = await visitsApi.getAll({ mrId });
 
-                                setPhotoError(err || '');
-                            }}
-                        />
-                    </div>
+        const formatted = await Promise.all(
+            data.map(async (visit) => {
+                const address = await getAddress(visit.Location?.latitude, visit.Location?.longitude);
+                return {
+                    id: visit._id,
+                    date: new Date(visit.createdAt).toLocaleDateString(),
+                    entityName: visit.DoctorId?.doctorName || visit.ChemistId?.chemistName || 'N/A',
+                    entityType: visit.DoctorId ? 'doctor' : visit.ChemistId ? 'chemist' : 'unknown',
+                    visitType: 'Visit',
+                    photos: visit.Photos?.map((p) => p.url) || [],
+                    latitude: visit.Location?.latitude,
+                    longitude: visit.Location?.longitude,
+                    address: address.address,
+                    notes: visit.Notes || '—',
+                    mrName: `${visit.MRId?.firstName || ''} ${visit.MRId?.lastName || ''}`.trim(),
+                };
+            })
+        );
 
-                    <button id="log-visit-submit" type="submit" disabled={isSubmitting} className="btn-primary w-full py-3">
-                        {isSubmitting ? <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Submitting…</> : 'Submit Visit'}
+        if (formatted[0]?.mrName) setMrName(formatted[0].mrName);
+        setVisits(formatted);
+        setLoading(false);
+    }, [mrId]);
+
+    useEffect(() => { fetchVisits(); }, [fetchVisits]);
+
+    return (
+        <div className="animate-fade-in">
+            <PageHeader
+                title={mrName ? `${mrName}'s Visit History` : 'Visit History'}
+                subtitle={`${visits.length} visits logged`}
+                action={
+                    <button id="add-product-btn" onClick={() => setModalOpen(true)} className="btn-primary">
+                        <Plus className="w-4 h-4" /> Log Visit
                     </button>
-                </form>
-            </div>
+                }
+            />
+
+            <DataTable columns={COLUMNS} data={visits} loading={loading} emptyMessage="No visits recorded yet" />
+
+            <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Log a Visit" size="lg" id="log-visit-modal">
+                <LogVisitForm
+                    mrId={mrId}
+                    onSuccess={fetchVisits}
+                    onCancel={() => setModalOpen(false)}
+                />
+            </Modal>
         </div>
     );
 }

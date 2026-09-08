@@ -88,7 +88,10 @@ const getAllVisitProof = asyncHandler(async (req, res) => {
     if (req.user.role === "MR") {
         visitProofs = await VisitProof
             .find({ MRId: req.user._id })
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
+            .populate("MRId", "firstName lastName _id regNo employeeId")
+            .populate("DoctorId")
+            .populate("ChemistId");
     }
 
     // Manager can see all visit proofs
