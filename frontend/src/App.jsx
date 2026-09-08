@@ -77,14 +77,15 @@ export default function App() {
               </RoleGuard>
             }
           >
-            <Route index                element={<MRDashboard />} />
-            <Route path="log-visit"     element={<LogVisit />} />
-            <Route path="tour-plan"     element={<UploadTourPlan />} />
-            <Route path="doctors"       element={<MyDoctors />} />
-            <Route path="record-product"element={<RecordProduct />} />
-            <Route path="preference"    element={<DoctorPreference />} />
-            <Route path="location"      element={<LocationToggle />} />
-            <Route path="profile"       element={<ProfilePage />} />
+            <Route index                  element={<MRDashboard />} />
+            <Route path="log-visit"       element={<LogVisit />} />
+            <Route path="tour-plan"       element={<UploadTourPlan />} />
+            <Route path="doctors"         element={<MyDoctors />} />
+            <Route path="record-product"  element={<RecordProduct />} />
+            <Route path="distribution"    element={<DistributionLog />} />
+            <Route path="preference"      element={<DoctorPreference />} />
+            <Route path="location"        element={<LocationToggle />} />
+            <Route path="profile"         element={<ProfilePage />} />
           </Route>
 
           {/* Fallback */}

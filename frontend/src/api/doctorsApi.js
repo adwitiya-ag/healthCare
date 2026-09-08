@@ -33,6 +33,8 @@ export const doctorsApi = {
     return response.json();
   },
 
+  
+
   // NEW — areas, optionally scoped to a city (for cascading dropdown)
   async getAreas(cityId) {
     const url = cityId ? `${BASE_URL}/areas?cityId=${cityId}` : `${BASE_URL}/areas`;

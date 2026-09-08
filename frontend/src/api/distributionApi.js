@@ -1,26 +1,57 @@
-import { mockDistribution, mockPreferences } from '../mocks/mockDistribution';
+const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-const delay = (ms = 150) => new Promise(res => setTimeout(res, ms));
-let distribution = [...mockDistribution];
-let preferences = [...mockPreferences];
 
 export const distributionApi = {
   async getAll(filters = {}) {
-    await delay();
-    let result = [...distribution];
-    if (filters.mrId)     result = result.filter(d => d.mrId === filters.mrId);
-    if (filters.dateFrom) result = result.filter(d => d.date >= filters.dateFrom);
-    if (filters.dateTo)   result = result.filter(d => d.date <= filters.dateTo);
-    if (filters.doctorId) result = result.filter(d => d.doctorId === filters.doctorId);
-    return result.sort((a, b) => b.date.localeCompare(a.date));
+
+    const params = new URLSearchParams();
+    if (filters.doctorId) params.append("doctorId", filters.doctorId);
+    if (filters.productId) params.append("productId", filters.productId);
+    if (filters.mrId) params.append("userId", filters.mrId);
+   
+    const response = await fetch(
+      `${BASE_URL}/sample-distribution/fetch?${params.toString()}`, 
+      {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+    });
+
+    if (!response.ok) {
+      throw new Error(`Fetching distributions failed! Status: ${response.status}`);
+    }
+    
+    const responseData = await response.json();
+    return responseData.data;
   },
 
   async record(data) {
-    await delay(300);
-    const newRecord = { id: Date.now(), ...data };
-    distribution.push(newRecord);
-    return newRecord;
+    const response = await fetch(
+      `${BASE_URL}/sample-distribution/add`,
+      {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        doctorId: data.doctorId,
+        productId: data.productId,
+        quantity: data.quantity || 1,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Recording distribution failed! Status: ${response.status}`);
+    }
+
+    const responseData = await response.json();
+    return responseData.data;
   },
+
+  
 };
 
 export const preferencesApi = {
