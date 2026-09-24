@@ -106,6 +106,29 @@ export const authApi = {
         
     },
 
+    async resetForgotPassword(oldPassword, newPassword){
+        //oldPassword, newPassword
+        const response = await fetch(
+        `${import.meta.env.VITE_BASE_URL}/users/reset-password`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    oldPassword: oldPassword,
+                    newPassword: newPassword
+                }),
+            },
+        );
+
+        if (!response.ok) {
+            throw new Error(`Password cannot be changed! Status: ${response.status}`);
+        }
+        const responseData = await response.json();
+        return  responseData ;
+    },
+
     async resetPassword(oldPassword, newPassword) { // parameter name has to be same as in backend
         //oldPassword, newPassword
         const response = await fetch(

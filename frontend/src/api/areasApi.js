@@ -100,4 +100,19 @@ export const areasApi = {
         const responseData = await response.json();
         return responseData.data;
     },
+
+    async reactive(id){
+        const response = await fetch(`${BASE_URL}/area/activate/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            throw new Error(`Reactivating area failed! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        return responseData.data;
+    }
 };

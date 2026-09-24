@@ -357,6 +357,30 @@ const changeCurrentPassword = asyncHandler(async (req, res) => {
 
 })
 
+const resetPassword = asyncHandler(async (req, res) => {
+    const {password, retypedPassword} = req.body;
+
+    if (!password || !retypedPassword) {
+        throw new ApiError(400, "Password is required");
+    }
+
+    const user = await User.findById(req.user?._id);
+
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400, "Invalid old password");
+    }
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave : false})
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+
+})
+
 
 const getCurrentUser = asyncHandler(async(req, res) => {
     return res

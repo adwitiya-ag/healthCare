@@ -98,4 +98,20 @@ export const citiesApi = {
         const responseData = await response.json();
         return responseData.data;
     },
+
+    async reactivate(id) {
+        const response = await fetch(`${BASE_URL}/city/activate/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+        });
+
+        if (!response.ok) {
+            const err = await response.json().catch(() => ({}));
+            throw new Error(err.message || `Reactivating city failed! Status: ${response.status}`);
+        }
+
+        const responseData = await response.json();
+        return responseData.data;
+    }
 };

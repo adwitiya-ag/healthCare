@@ -7,7 +7,7 @@ const connectDB = async () => { //async func will return a promise
     try{
         const connectionIntance = await mongoose.connect(`${process.env.MONGODB_URI}/${DB_NAME}`) //connecting
         //mongoose.connect() this func returns connection object which is then stored in connectionIntances
-        console.log(`\n mongoDB connected !! DB HOST: ${connectionIntance.connection.host}`);
+        console.log(`\nMongoDB connected !! DB HOST: ${connectionIntance.connection.host}`);
     }catch(error) {
         console.log("MONGODB connection error", error);
         //learn process from node js

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createSampleDistribution, getSampleDistributions} from "../controller/SampleDistribution.controller.js";
+import { createSampleDistribution, deleteDistribution, fetchSampleDistributions} from "../controller/SampleDistribution.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { verifyUser } from "../middleware/verifyUser.middleware.js";
 
@@ -12,10 +12,14 @@ router
   .route("/add")
   .post(verifyJWT, verifyUser, createSampleDistribution);
 
+router
+  .route("/delete")
+  .delete(verifyJWT, verifyUser, deleteDistribution);
+
 // GET /sample-distributions/fetch?doctorId=&mrId=&productId=
 // view sample distribution history, filtered by doctor, MR, or product
 router
   .route("/fetch")
-  .get(verifyJWT, verifyUser, getSampleDistributions);
+  .get(verifyJWT, verifyUser, fetchSampleDistributions);
 
 export default router;
