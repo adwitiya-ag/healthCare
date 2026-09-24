@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, FlaskConical, ClipboardList, Package,
   BarChart3, MapPin, LogOut, Menu, X, Activity, ChevronRight,
-  Settings, BookOpen, UserCircle
+  Settings, BookOpen, UserCircle, Building2, Globe
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -18,6 +18,8 @@ const NAV_ITEMS = [
   { to: '/manager/tracking',      label: 'Live Tracking',    icon: MapPin },
   { to: '/manager/qualifications',label: 'Qualifications',   icon: Settings },
   { to: '/manager/specialisations',label: 'Specialisations', icon: Settings },
+  { to: '/manager/areas-cities',  label: 'Areas & Cities',   icon: Globe },
+  { to: '/manager/companies',     label: 'Companies',        icon: Building2 },
 ];
 
 function Sidebar({ open, onClose }) {

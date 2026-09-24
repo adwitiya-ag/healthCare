@@ -22,6 +22,8 @@ import TourPlanReview        from './pages/manager/TourPlanReview';
 import ProductList           from './pages/products/ProductList';
 import DistributionLog       from './pages/distribution/DistributionLog';
 import LiveTracking          from './pages/tracking/LiveTracking';
+import AreaCityManage        from './pages/manager/AreaCityManage';
+import CompanyManage         from './pages/manager/CompanyManage';
 
 // MR pages
 import MRDashboard    from './pages/mr/MRDashboard';
@@ -65,6 +67,8 @@ export default function App() {
             <Route path="tracking"        element={<LiveTracking />} />
             <Route path="qualifications"  element={<ManageQualifications />} />
             <Route path="specialisations" element={<ManageSpecialisations />} />
+            <Route path="areas-cities" element={<AreaCityManage />} />
+            <Route path="companies" element={<CompanyManage />} />
             <Route path="profile" element={<ProfilePage />} />
           </Route>
 
