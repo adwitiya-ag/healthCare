@@ -39,36 +39,32 @@ const getDoctorPreference = asyncHandler(async (req, res) => {
 
 
 const addDoctorPreference = asyncHandler(async (req, res) => {
-    const { doctorId, productId, preferenceOrder } = req.body;
+    const { doctorId, productId, preferenceOrder, notes } = req.body;
 
-    if (!doctorId || !productId || !preferenceOrder){
-        throw new ApiError(400, "All fields are required");
+    if (!doctorId || !productId || preferenceOrder === undefined || preferenceOrder === null){
+        throw new ApiError(400, "doctorId, productId and preferenceOrder are all required");
     }
 
     const doctor = await Doctor.findById(doctorId);
-
     if (!doctor) {
         throw new ApiError(404, "Doctor not found");
     }
 
     const product = await Product.findById(productId);
-
     if (!product) {
         throw new ApiError(404, "Product not found");
     }
 
-    const existingPreference = await ProductPreference.findOne({doctorId,productId});
-
-    //Checking duplicate preference
+    const existingPreference = await ProductPreference.findOne({ doctorId, productId });
     if (existingPreference) {
         throw new ApiError(409, "Preference already exists.");
     }
 
-    //creating the preference
     const preference = await ProductPreference.create({
-    doctorId,
-    productId,
-    preferenceOrder
+        doctorId,
+        productId,
+        preferenceOrder,
+        notes: notes || "",
     });
 
     return res
@@ -77,30 +73,28 @@ const addDoctorPreference = asyncHandler(async (req, res) => {
 
 });
 
+
 const updateDoctorPreference = asyncHandler(async (req, res) => {
 
     const { preferenceId } = req.params;
 
-    const { doctorId, productId, preferenceOrder } = req.body;
+    const { doctorId, productId, preferenceOrder, notes } = req.body;
 
-    if (!doctorId || !productId || !preferenceOrder) {
-        throw new ApiError(400, "All fields are required");
+    if (!doctorId || !productId || preferenceOrder === undefined || preferenceOrder === null) {
+        throw new ApiError(400, "doctorId, productId and preferenceOrder are all required");
     }
 
     const preference = await ProductPreference.findById(preferenceId);
-
     if (!preference) {
         throw new ApiError(404, "Preference not found");
     }
 
     const doctor = await Doctor.findById(doctorId);
-
     if (!doctor) {
         throw new ApiError(404, "Doctor not found");
     }
 
     const product = await Product.findById(productId);
-
     if (!product) {
         throw new ApiError(404, "Product not found");
     }
@@ -108,9 +102,9 @@ const updateDoctorPreference = asyncHandler(async (req, res) => {
     const existingPreference = await ProductPreference.findOne({
         doctorId,
         productId,
+        preferenceOrder,
         _id: { $ne: preferenceId }        
     });
-
     if (existingPreference) {
         throw new ApiError(409, "Preference already exists");
     }
@@ -120,19 +114,17 @@ const updateDoctorPreference = asyncHandler(async (req, res) => {
         preferenceOrder,
         _id: { $ne: preferenceId }
     });
-
-
     if (orderExists) {
         throw new ApiError(409,"Preference order already exists for this doctor");
     }
 
-    //updating
     const updatedPreference = await ProductPreference.findByIdAndUpdate(
     preferenceId,
     {
         doctorId,
         productId,
         preferenceOrder,
+        notes: notes || "",
     },
     {
         new: true,
@@ -161,21 +153,13 @@ const deleteDoctorPreference = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid preference ID");
     }
 
-    const preference = await ProductPreference.findById(preferenceId);
+    // CHANGED — actually delete the document instead of soft-deactivating it,
+    // so the {doctorId, productId} unique index frees up immediately
+    const preference = await ProductPreference.findByIdAndDelete(preferenceId);
 
     if (!preference) {
         throw new ApiError(404, "Preference not found");
     }
-
-    await ProductPreference.findByIdAndUpdate(
-        preferenceId,
-        {
-            isActive: false
-        },
-        {
-            new: true
-        }
-    );
 
     return res
     .status(200)
@@ -192,5 +176,5 @@ export {
     getDoctorPreference,
     addDoctorPreference,
     updateDoctorPreference,
-    deleteDoctorPreference
+    deleteDoctorPreference,
 }

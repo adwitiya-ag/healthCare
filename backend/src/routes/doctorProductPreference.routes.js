@@ -8,14 +8,11 @@ import {
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { verifyUser } from "../middleware/verifyUser.middleware.js";
 
-
 const router = Router();
 
-// Since only logged-in users can add product preferences
 router.route("/").post(verifyJWT, verifyUser, addDoctorPreference);
 router.route("/:doctorId").get(verifyJWT, verifyUser, getDoctorPreference);
 router.route("/:preferenceId").put(verifyJWT, verifyUser, updateDoctorPreference);
 router.route("/:preferenceId").delete(verifyJWT, verifyUser, deleteDoctorPreference);
-
 
 export default router;

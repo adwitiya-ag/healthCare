@@ -41,3 +41,5 @@ productPreferenceSchema.index({ productId: 1 });
 productPreferenceSchema.index({ isActive: 1 });
 
 export const ProductPreference = mongoose.model("ProductPreference", productPreferenceSchema);
+
+

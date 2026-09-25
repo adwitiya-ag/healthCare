@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { to: '/manager/visits',        label: 'Visit Review',     icon: ClipboardList },
   { to: '/manager/tour-plans',    label: 'Tour Plans',       icon: BookOpen },
   { to: '/manager/products',      label: 'Products',         icon: Package },
+  { to: '/manager/preference',      label: 'Doctor Preference',  icon: Settings },
   { to: '/manager/distribution',  label: 'Distribution',     icon: BarChart3 },
   { to: '/manager/tracking',      label: 'Live Tracking',    icon: MapPin },
   { to: '/manager/qualifications',label: 'Qualifications',   icon: Settings },

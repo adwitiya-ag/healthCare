@@ -72,6 +72,28 @@ export default function App() {
                         <Route path="companies" element={<CompanyManage />} />
                         <Route path="profile" element={<ProfilePage />} />
                     </Route>
+          {/* Manager */}
+          <Route
+            path="/manager"
+            element={
+              <RoleGuard allowedRole="MANAGER">
+                <ManagerLayout />
+              </RoleGuard>
+            }
+          >
+            <Route index                  element={<ManagerDashboard />} />
+            <Route path="doctors"         element={<DoctorList />} />
+            <Route path="chemists"        element={<ChemistList />} />
+            <Route path="visits"          element={<VisitReview />} />
+            <Route path="tour-plans"      element={<TourPlanReview />} />
+            <Route path="products"        element={<ProductList />} />
+            <Route path="preference"    element={<DoctorPreference />} />
+            <Route path="distribution"    element={<DistributionLog />} />
+            <Route path="tracking"        element={<LiveTracking />} />
+            <Route path="qualifications"  element={<ManageQualifications />} />
+            <Route path="specialisations" element={<ManageSpecialisations />} />
+            <Route path="profile" element={<ProfilePage />} />
+          </Route>
 
                     {/* MR */}
                     <Route

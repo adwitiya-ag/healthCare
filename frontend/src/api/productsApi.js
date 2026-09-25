@@ -1,118 +1,109 @@
 const BASE_URL = import.meta.env.VITE_BASE_URL;
+const PRODUCT_URL = `${BASE_URL}/products`;
+
+const mapProduct = (p) => ({
+  id: p._id,
+  name: p.productName,
+  companyId: p.companyId?._id,
+  companyName: p.companyId?.companyName,
+  strength: p.strength,
+  packSize: p.packSize,
+  mrp: p.mrp,
+  active: p.isActive,
+});
 
 export const productsApi = {
-    async getAll(filters = {}) {
-        const response = await fetch(`${BASE_URL}/products/getallproducts`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-        });
+  async getAll({ search } = {}) {
+    const response = await fetch(`${PRODUCT_URL}/getallproducts`, {
+      credentials: 'include', // route requires verifyJWT
+    });
+    if (!response.ok) throw new Error('Failed to fetch products');
+    const json = await response.json();
+    let result = (json.data || []).map(mapProduct);
 
-        if (!response.ok) {
-            throw new Error(`Fetching products failed! Status: ${response.status}`);
-        }
+    // backend has no text-search endpoint — filter client-side
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.name.toLowerCase().includes(q) ||
+          (p.companyName || '').toLowerCase().includes(q)
+      );
+    }
+    return result;
+  },
 
-        const responseData = await response.json();
-        let result = responseData.data || [];
+  async getById(id) {
+    const response = await fetch(`${PRODUCT_URL}/getproduct/${id}`, {
+      credentials: 'include',
+    });
+    if (!response.ok) throw new Error('Failed to fetch product');
+    const json = await response.json();
+    return mapProduct(json.data);
+  },
 
-        // backend has no query-param filtering, so filter client-side
-        if (filters.search) {
-            const term = filters.search.toLowerCase();
-            result = result.filter((p) => p.productName?.toLowerCase().includes(term));
-        }
-        if (filters.companyId) {
-            result = result.filter((p) => (p.companyId?._id || p.companyId) === filters.companyId);
-        }
+  async create(data) {
+    const payload = {
+      productName: data.name,
+      companyId: data.companyId,
+      strength: data.strength,
+      packSize: data.packSize,
+      mrp: data.mrp,
+    };
+    const response = await fetch(`${PRODUCT_URL}/addproduct`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to add product');
+    }
+    const json = await response.json();
+    return mapProduct(json.data);
+  },
 
-        return result;
-    },
+  async update(id, data) {
+    const payload = {
+      productName: data.name,
+      companyId: data.companyId,
+      strength: data.strength,
+      packSize: data.packSize,
+      mrp: data.mrp,
+      isActive: data.active !== undefined ? data.active : true,
+    };
+    const response = await fetch(`${PRODUCT_URL}/updateproduct/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.message || 'Failed to update product');
+    }
+    const json = await response.json();
+    return mapProduct(json.data);
+  },
 
-    async getById(id) {
-        const response = await fetch(`${BASE_URL}/products/getproduct/${id}`, {
-            method: "GET",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-        });
-
-        if (!response.ok) {
-            if (response.status === 404) return null;
-            throw new Error(`Fetching product failed! Status: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        return responseData.data;
-    },
-
-    async create(data) {
-        const response = await fetch(`${BASE_URL}/products/addproduct`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-                productName: data.productName,
-                companyId: data.companyId,
-                strength: data.strength,
-                packSize: data.packSize,
-                mrp: data.mrp,
-            }),
-        });
-
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.message || `Creating product failed! Status: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        return responseData.data;
-    },
-
-    async update(id, data) {
-        const response = await fetch(`${BASE_URL}/products/updateproduct/${id}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-                productName: data.productName,
-                companyId: data.companyId,
-                strength: data.strength,
-                packSize: data.packSize,
-                mrp: data.mrp,
-                isActive: data.isActive,
-            }),
-        });
-
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.message || `Updating product failed! Status: ${response.status}`);
-        }
-
-        const responseData = await response.json();
-        return responseData.data;
-    },
-
-    async toggleActive(id, currentValue) {
-        // Backend's deleteProduct only sets isActive: false (soft delete).
-        // To flip it back on, or to toggle either way generically, we go
-        // through updateProduct with the inverted isActive value instead.
-        if (currentValue === true) {
-            const response = await fetch(`${BASE_URL}/products/deleteproduct/${id}`, {
-                method: "DELETE",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-            });
-
-            if (!response.ok) {
-                throw new Error(`Deactivating product failed! Status: ${response.status}`);
-            }
-
-            const responseData = await response.json();
-            return responseData.data;
-        }
-
-        // reactivating: no dedicated endpoint, so use full update
-        const product = await this.getById(id);
-        if (!product) throw new Error("Product not found");
-
-        return this.update(id, { ...product, isActive: true });
-    },
+  // toggleActive has two paths, since /deleteproduct is one-directional (always sets isActive:false)
+  async toggleActive(product) {
+    if (product.active) {
+      // deactivate via the dedicated soft-delete route
+      const response = await fetch(`${PRODUCT_URL}/deleteproduct/${product.id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to deactivate product');
+      }
+      const json = await response.json();
+      return mapProduct(json.data);
+    } else {
+      // reactivate via update, since there's no dedicated "activate" route
+      return this.update(product.id, { ...product, active: true });
+    }
+  },
 };

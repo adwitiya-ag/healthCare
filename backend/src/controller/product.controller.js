@@ -80,17 +80,26 @@ const updateProduct = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid company ID format");
     }
 
-    const product = await Product.findByIdAndUpdate(
-        id,
-        {
-            $set:
-            {
-                productName,
-                companyId,
-                strength,
-                packSize,
-                mrp,
-                isActive
+    // const existingProduct = await Product.findById(id);
+
+    // if (!existingProduct) {
+    //     throw new ApiError(404, "Product not found");
+    // }
+
+    // if (!existingProduct.isActive) {
+    //     throw new ApiError(400, "Inactive product cannot be updated. Reactivate it first.");
+    // }
+
+    const product = await Product.findByIdAndUpdate( 
+        id, 
+        { 
+            $set: 
+            {productName,
+            companyId,
+            strength,
+            packSize,
+            mrp,
+            isActive
             }
         },
         { new: true, runValidators: true })
