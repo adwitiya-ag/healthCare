@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
+import { User } from "../models/user.model.js";
 
 // Manager/MR uploads a tour plan excel file.
 // Multer already saved it TEMPORARILY to public/temp.
@@ -61,4 +62,39 @@ const exportTourPlan = asyncHandler(async (req, res) => {
   return res.redirect(tourPlan.fileUrl);
 });
 
-export { uploadTourPlan, exportTourPlan };
+
+// Get all tour plans (history) uploaded by the logged-in salesperson,
+// newest first.
+const getAllTourPlans = asyncHandler(async (req, res) => {
+
+  //temporary 
+  console.log("Logged in user:", req.user._id, req.user.role);
+  
+  let filter;
+
+  if (req.user.role === "MANAGER") {
+    // find all MRs reporting to this manager, then get their tour plans
+    const teamMembers = await User.find({ manager: req.user._id }).select("_id");
+    console.log("Team members found:", teamMembers); // ← temporary debug log
+    const teamMemberIds = teamMembers.map((u) => u._id);
+    console.log("Team member IDs:", teamMemberIds); // ← temporary debug log
+    filter = { salespersonId: { $in: teamMemberIds } };
+  } else if (req.user.role === "ADMIN") {
+    // admin sees everyone's tour plans
+    filter = {};
+  } else {
+    // MR sees only their own
+    filter = { salespersonId: req.user._id };
+  }
+
+  const tourPlans = await TourPlan.find(filter)
+    .populate("salespersonId", "firstName lastName employeeId")
+    .sort({ createdAt: -1 });
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, tourPlans, "Tour plans fetched successfully"));
+});
+
+
+export { uploadTourPlan, exportTourPlan, getAllTourPlans };

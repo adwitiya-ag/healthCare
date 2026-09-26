@@ -3,11 +3,9 @@ import { CheckCircle } from 'lucide-react';
 import PageHeader from '../../components/PageHeader';
 import FileUpload from '../../components/FileUpload';
 import { tourPlansApi } from '../../api/visitsApi';
-import { useAuth } from '../../context/AuthContext';
 
 export default function UploadTourPlan() {
-  const { user } = useAuth();
-  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfFile, setPdfFile] = useState([]);
   const [pdfError, setPdfError] = useState('');
   const [month, setMonth] = useState('');
   const [monthError, setMonthError] = useState('');
@@ -16,13 +14,19 @@ export default function UploadTourPlan() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!pdfFile) { setPdfError('Please select a PDF file'); return; }
+    if (!pdfFile || pdfFile.length === 0) { setPdfError('Please select an Excel file'); return; }
     if (!month) { setMonthError('Please select the month'); return; }
+
     setLoading(true);
-    await tourPlansApi.upload({ mrId: user.id, mrName: user.name, month, filename: pdfFile.name, fileSize: `${(pdfFile.size / 1024).toFixed(0)} KB` });
-    setLoading(false);
-    setSuccess(true);
-    setTimeout(() => { setSuccess(false); setPdfFile(null); setMonth(''); }, 3000);
+    try {
+      await tourPlansApi.upload(pdfFile[0]); // FileUpload always sends an array — grab the actual file
+      setSuccess(true);
+      setTimeout(() => { setSuccess(false); setPdfFile([]); setMonth(''); }, 3000);
+    } catch (err) {
+      setPdfError(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (success) {
@@ -37,7 +41,7 @@ export default function UploadTourPlan() {
 
   return (
     <div className="animate-fade-in max-w-lg">
-      <PageHeader title="Upload Tour Plan" subtitle="Submit your monthly field tour plan PDF" />
+      <PageHeader title="Upload Tour Plan" subtitle="Submit your monthly field tour plan Excel file" />
 
       <div className="card p-6">
         <form onSubmit={handleSubmit} className="space-y-5" id="tour-plan-form">
@@ -54,19 +58,19 @@ export default function UploadTourPlan() {
           </div>
 
           <div>
-            <label className="form-label">Tour Plan PDF *</label>
+            <label className="form-label">Tour Plan Excel File *</label>
             <FileUpload
               id="tour-plan-pdf"
-              accept="pdf"
-              label="Upload Tour Plan PDF"
+              accept="excel"
+              label="Upload Tour Plan Excel File"
               value={pdfFile}
               error={pdfError}
-              onFileSelect={(file, err) => { setPdfFile(file); setPdfError(err || ''); }}
+              onFileSelect={(files, err) => { setPdfFile(files || []); setPdfError(err || ''); }}
             />
           </div>
 
           <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
-            📄 Only PDF files are accepted. Maximum size: 5 MB. Ensure the plan covers your full tour schedule for the selected month.
+            📄 Only .xlsx or .xls files are accepted. Maximum size: 5 MB. Ensure the plan covers your full tour schedule for the selected month.
           </div>
 
           <button id="tour-plan-submit" type="submit" disabled={loading} className="btn-primary w-full py-3">

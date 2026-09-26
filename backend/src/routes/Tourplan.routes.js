@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { uploadTourPlan, exportTourPlan } from "../controller/Tourplan.controller.js";
+import { uploadTourPlan, exportTourPlan, getAllTourPlans } from "../controller/Tourplan.controller.js";
 import { verifyJWT } from "../middleware/auth.middleware.js";
 import { verifyUser } from "../middleware/verifyUser.middleware.js";
 import { uploadExcel } from "../middleware/multer.middleware.js";
@@ -13,5 +13,8 @@ router
 
 // GET /export -> download the current tour plan as excel
 router.route("/export").get(verifyJWT, verifyUser, exportTourPlan);
+
+// GET /all -> get this salesperson's full tour plan upload history
+router.route("/all").get(verifyJWT, verifyUser, getAllTourPlans);
 
 export default router;

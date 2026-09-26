@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 
+
 const tourPlanSchema = new mongoose.Schema(
   {
     // who uploaded this tour plan (the logged-in Manager/MR)

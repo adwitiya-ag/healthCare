@@ -1,9 +1,8 @@
 import { mockVisits } from '../mocks/mockVisits';
-import { mockTourPlans } from '../mocks/mockTourPlans';
+
 
 const delay = (ms = 150) => new Promise(res => setTimeout(res, ms));
 let visits = [...mockVisits];
-let tourPlans = [...mockTourPlans];
 
 export const visitsApi = {
 
@@ -69,21 +68,47 @@ export const visitsApi = {
 };
 
 export const tourPlansApi = {
-    async getAll(filters = {}) {
-        await delay();
-        let result = [...tourPlans];
-        if (filters.mrId) result = result.filter(t => t.mrId === filters.mrId);
-        return result;
+    // Upload a tour plan excel file
+    async upload(file) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch(
+            `${import.meta.env.VITE_BASE_URL}/tour/upload`,
+            {
+                method: "POST",
+                credentials: "include",
+                body: formData,
+            },
+        );
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            const errorMessage = responseData.message || `Tour plan upload failed! Status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+        return responseData.data;
     },
 
-    async upload(data) {
-        await delay(500);
-        const newPlan = {
-            id: Date.now(),
-            uploadedAt: new Date().toISOString().split('T')[0],
-            ...data,
-        };
-        tourPlans.push(newPlan);
-        return newPlan;
+    // Get full upload history for the logged-in salesperson
+    async getAll(filters = {}) {
+        const response = await fetch(
+            `${import.meta.env.VITE_BASE_URL}/tour/all`,
+            { credentials: "include" },
+        );
+
+        const responseData = await response.json();
+
+        if (!response.ok) {
+            const errorMessage = responseData.message || `Failed to fetch tour plans! Status: ${response.status}`;
+            throw new Error(errorMessage);
+        }
+        return responseData.data;
+    },
+
+    // Trigger download of the active tour plan (controller does res.redirect)
+    async export() {
+        window.location.href = `${import.meta.env.VITE_BASE_URL}/tour/export`;
     },
 };

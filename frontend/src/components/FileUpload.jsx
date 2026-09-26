@@ -14,11 +14,17 @@ export default function FileUpload({
     const [dragOver, setDragOver] = useState(false);
     const [preview, setPreview] = useState(null);
 
-    const ACCEPT_MAP = {
+        const ACCEPT_MAP = {
         image: '.jpg,.jpeg,.png',
         pdf: '.pdf',
+        excel: '.xlsx,.xls',
     };
     const acceptAttr = ACCEPT_MAP[accept] || accept;
+
+    const EXCEL_MIME_TYPES = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+        'application/vnd.ms-excel', // .xls
+    ];
 
     const validate = (file) => {
         if (accept === 'image') {
@@ -28,6 +34,10 @@ export default function FileUpload({
         } else if (accept === 'pdf') {
             if (file.type !== 'application/pdf') {
                 return 'Only PDF files are allowed';
+            }
+        } else if (accept === 'excel') {
+            if (!EXCEL_MIME_TYPES.includes(file.type)) {
+                return 'Only .xlsx or .xls files are allowed';
             }
         }
         return null;
@@ -100,7 +110,9 @@ export default function FileUpload({
                         <div>
                             <p className="text-sm font-medium text-slate-700">{label}</p>
                             <p className="text-xs text-slate-400 mt-0.5">Drag & drop or click to browse</p>
-                            <p className="text-xs text-slate-400">{accept === 'image' ? 'JPG, PNG only' : 'PDF only'}</p>
+                            <p className="text-xs text-slate-400">
+                                {accept === 'image' ? 'JPG, PNG only' : accept === 'excel' ? 'XLSX, XLS only' : 'PDF only'}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -129,6 +141,7 @@ export default function FileUpload({
             {/* Preview */}
             
             
+                {value.length > 0 && (
                 <div className="space-y-3">
 
                     {value.map((file, index) => (
@@ -157,15 +170,16 @@ export default function FileUpload({
                     ))}
 
 
-        <button
+            <button
             type="button"
             onClick={handleClear}
             className="text-sm text-danger"
-        >
+            >
             Remove all
-        </button>
+            </button>
 
-    </div>
+            </div>
+            )}
 
 
             {error && <p className="form-error">⚠ {error}</p>}
