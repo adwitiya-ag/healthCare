@@ -69,7 +69,7 @@ app.use("/api/v1", doctorRouter);
 app.use("/api/v1", chemistRouter);
 
 // tourPlan.routes.js already defines full paths internally (/upload, /export)
- app.use("/api/v1/tour", tourPlanRouter);
+app.use("/api/v1/tour", tourPlanRouter);
 app.use("/api/v1/preference", doctorProductPreferenceRouter);
 
 app.use("/api/v1/location", locationRouter)

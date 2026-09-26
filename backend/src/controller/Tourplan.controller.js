@@ -1,3 +1,4 @@
+import { v2 as cloudinary } from "cloudinary";
 import { TourPlan } from "../models/tourPlan.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
@@ -5,32 +6,28 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { User } from "../models/user.model.js";
 
-// Manager/MR uploads a tour plan excel file.
-// Multer already saved it TEMPORARILY to public/temp.
-// We now upload that temp file to Cloudinary and save the
-// returned URL in the database.
+// add tourplan
 const uploadTourPlan = asyncHandler(async (req, res) => {
-  // Step 1: multer already processed the file and saved it locally
+  // multer already processed the file and saved it locally
   // req.file.path tells us where the file is stored temporarily.
   if (!req.file) {
     throw new ApiError(400, "No excel file uploaded");
   }
 
-  // Step 2: upload that local file to Cloudinary
+  // upload that local file to Cloudinary
   const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
 
   if (!cloudinaryResponse) {
     throw new ApiError(500, "Failed to upload file to Cloudinary");
   }
 
-  // Step 3: if this salesperson already has an active tour plan,
-  // mark it inactive first (keep as history, don't delete)
+  // if this salesperson already has an active tour plan mark it inactive first (keep as history, don't delete)
   await TourPlan.updateMany(
     { salespersonId: req.user._id, isActive: true },
     { $set: { isActive: false } }
   );
 
-  // Step 4: save the Cloudinary URL + details in the database
+  // save the Cloudinary URL + details in the database
   const tourPlan = await TourPlan.create({
     salespersonId: req.user._id,
     originalFileName: req.file.originalname,
@@ -56,7 +53,7 @@ const exportTourPlan = asyncHandler(async (req, res) => {
     throw new ApiError(404, "No tour plan found to export");
   }
 
-  // Step 2: simplest approach — just redirect the browser/Postman
+  // simplest approach — just redirect the browser/Postman
   // straight to the Cloudinary file URL. Cloudinary serves the file
   // directly, so this triggers a download.
   return res.redirect(tourPlan.fileUrl);
@@ -96,5 +93,50 @@ const getAllTourPlans = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, tourPlans, "Tour plans fetched successfully"));
 });
 
+// Delete uploaded tour plan
+const deleteTourPlan = asyncHandler(async (req, res) => {
+  const { id } = req.params;
 
-export { uploadTourPlan, exportTourPlan, getAllTourPlans };
+  // find the tour plan record we want to delete
+  const tourPlan = await TourPlan.findById(id);
+
+  if (!tourPlan) {
+    throw new ApiError(404, "Tour plan not found");
+  }
+
+  // check the logged-in user is actually allowed to delete this one
+  const isOwnTourPlan =
+    tourPlan.salespersonId.toString() === req.user._id.toString();
+
+  let isAllowed = isOwnTourPlan;
+
+  // if it's not their own, a MANAGER may still delete it if the
+  // tour plan belongs to someone on their team
+  if (!isAllowed && req.user.role === "MANAGER") {
+    const teamMembers = await User.find({ manager: req.user._id }).select("_id");
+    const teamMemberIds = teamMembers.map((u) => u._id.toString());
+    isAllowed = teamMemberIds.includes(tourPlan.salespersonId.toString());
+  }
+
+  if (!isAllowed) {
+    throw new ApiError(
+      403,
+      "You are not allowed to delete this tour plan"
+    );
+  }
+
+  // delete the actual file from Cloudinary first
+  // resource_type: "raw" must match what we used when uploading it
+  await cloudinary.uploader.destroy(tourPlan.cloudinaryPublicId, {
+    resource_type: "raw",
+  });
+
+  // delete the record from MongoDB
+  await TourPlan.findByIdAndDelete(id);
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, {}, "Tour plan deleted successfully"));
+});
+
+export { uploadTourPlan, exportTourPlan, getAllTourPlans, deleteTourPlan };
