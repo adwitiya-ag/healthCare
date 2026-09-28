@@ -23,9 +23,9 @@ import companyRouter from "./src/routes/company.routes.js";
 
 import productRouter from "./src/routes/product.routes.js";
 
-import cityRouter from "./src/routes/city.routes.js";
+import cityRouter from "./src/routes/City.routes.js";
 
-import areaRouter from "./src/routes/area.routes.js";
+import areaRouter from "./src/routes/Area.routes.js";
 
 import masterDataRouter from "./src/routes/Masterdata.routes.js";
 
