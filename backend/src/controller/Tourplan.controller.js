@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { TourPlan } from "../models/tourPlan.model.js";
+import { TourPlan } from "../models/TourPlan.model.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
