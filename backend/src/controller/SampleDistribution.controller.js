@@ -1,4 +1,4 @@
-import { SampleDistribution } from "../models/sampleDistribution.model.js";
+import { SampleDistribution } from "../models/SampleDistribution.model.js";
 import { Doctor } from "../models/doctor.model.js";
 import { Product } from "../models/product.model.js";
 import { ApiError } from "../utils/ApiError.js";
