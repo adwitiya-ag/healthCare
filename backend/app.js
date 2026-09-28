@@ -29,9 +29,9 @@ import areaRouter from "./src/routes/Area.routes.js";
 
 import masterDataRouter from "./src/routes/Masterdata.routes.js";
 
-import doctorRouter from "./src/routes/doctor.routes.js";
+import doctorRouter from "./src/routes/Doctor.routes.js";
 
-import chemistRouter from "./src/routes/chemist.routes.js";
+import chemistRouter from "./src/routes/Chemist.routes.js";
 
 import tourPlanRouter from "./src/routes/Tourplan.routes.js";
 
@@ -41,7 +41,7 @@ import locationRouter from "./src/routes/Location.route.js"
 
 import visitProofRouter from "./src/routes/visitProof.route.js";
 
-import sampleDistributionRouter from "./src/routes/sampleDistribution.routes.js";
+import sampleDistributionRouter from "./src/routes/SampleDistribution.routes.js";
 
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
