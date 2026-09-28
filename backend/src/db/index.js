@@ -11,7 +11,8 @@ const connectDB = async () => { //async func will return a promise
     }catch(error) {
         console.log("MONGODB connection error", error);
         //learn process from node js
-        process.exit(1);
+        // process.exit(1);
+        throw new Error("MONGODB connection error", error);
         /*Stops the Node.js application immediately.
         1 means: Exit with failure.
         (0 means success, 1 means error)*/ 
