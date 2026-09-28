@@ -82,4 +82,11 @@ app.use("/api/v1/sample-distribution", sampleDistributionRouter);
 
 app.use(errorHandler);
 
+app.get("/health", (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        message: "Healthcare API is running"
+    });
+});
+
 export {app}; //Exporting App so it can be used in another file
