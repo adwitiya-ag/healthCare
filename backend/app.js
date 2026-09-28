@@ -89,4 +89,4 @@ app.get("/health", (req, res) => {
     });
 });
 
-export {app}; //Exporting App so it can be used in another file
+export default app; //Exporting App so it can be used in another file
