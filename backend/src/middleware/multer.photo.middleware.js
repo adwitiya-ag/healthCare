@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const tempDir = process.env.ENVIRONMENT === "production"
-    ? path.join(__dirname, "/tmp")
+    ? "/tmp"
     : path.join(__dirname, "../../public/temp");
 
 if (!fs.existsSync(tempDir)) {
