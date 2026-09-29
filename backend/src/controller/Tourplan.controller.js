@@ -17,9 +17,9 @@ const uploadTourPlan = asyncHandler(async (req, res) => {
   // upload that local file to Cloudinary
   const cloudinaryResponse = await uploadOnCloudinary(req.file.path);
 
-  if (!cloudinaryResponse) {
-    throw new ApiError(500, "Failed to upload file to Cloudinary");
-  }
+    if (!cloudinaryResponse) {
+        throw new ApiError(500, "Failed to upload file to Cloudinary");
+    }
 
   // if this salesperson already has an active tour plan mark it inactive first (keep as history, don't delete)
   await TourPlan.updateMany(
@@ -36,22 +36,22 @@ const uploadTourPlan = asyncHandler(async (req, res) => {
     isActive: true,
   });
 
-  return res
-    .status(201)
-    .json(new ApiResponse(201, tourPlan, "Tour plan uploaded successfully"));
+    return res
+        .status(201)
+        .json(new ApiResponse(201, tourPlan, "Tour plan uploaded successfully"));
 });
 
 // Give the client the Cloudinary link to download the currently active tour plan excel file.
 const exportTourPlan = asyncHandler(async (req, res) => {
-  // Step 1: find this salesperson's current active tour plan record
-  const tourPlan = await TourPlan.findOne({
-    salespersonId: req.user._id,
-    isActive: true,
-  });
+    // Step 1: find this salesperson's current active tour plan record
+    const tourPlan = await TourPlan.findOne({
+        salespersonId: req.user._id,
+        isActive: true,
+    });
 
-  if (!tourPlan) {
-    throw new ApiError(404, "No tour plan found to export");
-  }
+    if (!tourPlan) {
+        throw new ApiError(404, "No tour plan found to export");
+    }
 
   // simplest approach — just redirect the browser/Postman
   // straight to the Cloudinary file URL. Cloudinary serves the file

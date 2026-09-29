@@ -7,7 +7,9 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const tempDir = path.join(__dirname, "../../public/temp");
+const tempDir = process.env.ENVIRONMENT === "production"
+    ? path.join(__dirname, "/tmp")
+    : path.join(__dirname, "../../public/temp");
 
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
