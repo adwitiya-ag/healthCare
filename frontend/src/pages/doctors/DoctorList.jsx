@@ -50,13 +50,15 @@ function DoctorList() {
         const fetchSpecialization = async () => {
             try {
                 const response = await doctorsApi.getSpecialization();
-                setSPECIALIZATIONS(response.data);
+                const activeItems = response.data.filter((s) => s.isActive);
+                setSPECIALIZATIONS(activeItems);
             } catch (error) { console.error(error); }
         };
         const fetchQualifications = async () => {
             try {
                 const response = await doctorsApi.getQualifications();
-                setQUALIFICATIONS(response.data);
+                const activeItems = response.data.filter((s) => s.isActive);
+                setQUALIFICATIONS(activeItems);
             } catch (error) { console.error(error); }
         };
         const fetchCities = async () => {
@@ -97,7 +99,7 @@ function DoctorList() {
 
     useEffect(() => { fetch(); }, [fetch]);
 
-    const handleToggle = async (id) => { await doctorsApi.toggleActive(id); fetch(); };
+    const handleToggle = async (id) => { await doctorsApi.toggleDoctor(id); fetch(); };
 
     const openAdd = () => { setEditing(null); setModalOpen(true); };
     const openEdit = (row) => { setEditing(row); setModalOpen(true); };

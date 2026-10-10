@@ -2,15 +2,17 @@ import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, BookOpen, Users, Package,
-  Star, MapPin, LogOut, Menu, X, Activity, ChevronRight, UserCircle
+  Star, MapPin, LogOut, Menu, X, Activity, ChevronRight, UserCircle,
+  FlaskConical
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_ITEMS = [
-  { to: '/mr',               label: 'Dashboard',        icon: LayoutDashboard, end: true },
-  { to: '/mr/log-visit',     label: 'Log a Visit',      icon: ClipboardList },
+  { to: '/mr',               label: 'Dashboard',         icon: LayoutDashboard, end: true },
+  { to: '/mr/log-visit',     label: 'Log a Visit',       icon: ClipboardList },
   { to: '/mr/tour-plan',     label: 'Tour Plan',         icon: BookOpen },
   { to: '/mr/doctors',       label: 'My Doctors',        icon: Users },
+  { to: '/mr/chemists',      label: 'My Chemists',       icon: FlaskConical },
   { to: '/mr/record-product',label: 'Record Product',    icon: Package },
   { to: '/mr/preference',    label: 'Dr. Preferences',   icon: Star },
   { to: '/mr/location',      label: 'Live Location',     icon: MapPin },

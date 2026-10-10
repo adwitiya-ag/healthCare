@@ -199,8 +199,8 @@ export default function VisitReview() {
                     mrName: `${visit.MRId?.firstName || ""} ${visit.MRId?.lastName || ""}`,
 
                     entityName:
-                        visit.DoctorId?.doctorName ||
-                        visit.ChemistId?.chemistName ||
+                        visit.DoctorId?.[0]?.doctorName ||
+                        visit.ChemistId?.[0]?.chemistName ||
                         "N/A",
 
                     entityType:

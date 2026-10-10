@@ -24,7 +24,6 @@ const COLUMNS = [
     { key: 'area', label: 'Area' },
     { key: 'chemistType', label: 'Type' },
     { key: 'active', label: 'Status', render: (v) => <StatusBadge active={v} /> },
-    { key: 'actions', label: 'Actions', sortable: false },
 ];
 
 const CHEMIST_TYPES = ['RETAIL', 'WHOLESALE', 'HOSPITAL', 'ONLINE'];
@@ -81,28 +80,28 @@ export default function ChemistList() {
 
     const handleToggle = async (id) => { await chemistsApi.toggleActive(id); fetch(); };
 
-    const cols = COLUMNS.map((col) =>
-        col.key === 'actions'
-            ? {
-                ...col,
-                render: (_, row) =>
-                    isManager ? (
-                        <div className="flex items-center gap-2">
-                            <button id={`edit-chemist-${row.id}`} onClick={() => { setEditing(row); setModalOpen(true); }} className="btn-ghost btn-sm">
-                                <Pencil className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                                id={`toggle-chemist-${row.id}`}
-                                onClick={() => handleToggle(row.id)}
-                                className={`btn-sm ${row.active ? 'btn-secondary text-danger' : 'btn-secondary text-success'}`}
-                            >
-                                {row.active ? 'Deactivate' : 'Activate'}
-                            </button>
-                        </div>
-                    ) : null,
-            }
-            : col
-    );
+    // const cols = COLUMNS.map((col) =>
+    //     col.key === 'actions'
+    //         ? {
+    //             ...col,
+    //             render: (_, row) =>
+    //                 isManager ? (
+    //                     <div className="flex items-center gap-2">
+    //                         <button id={`edit-chemist-${row.id}`} onClick={() => { setEditing(row); setModalOpen(true); }} className="btn-ghost btn-sm">
+    //                             <Pencil className="w-3.5 h-3.5" />
+    //                         </button>
+    //                         {/* <button
+    //                             id={`toggle-chemist-${row.id}`}
+    //                             onClick={() => handleToggle(row.id)}
+    //                             className={`btn-sm ${row.active ? 'btn-secondary text-danger' : 'btn-secondary text-success'}`}
+    //                         >
+    //                             {row.Active ? 'Deactivate' : 'Activate'}
+    //                         </button> */}
+    //                     </div>
+    //                 ) : null,
+    //         }
+    //         : col
+    // );
 
     return (
         <div className="animate-fade-in">
@@ -130,7 +129,7 @@ export default function ChemistList() {
                 onClear={() => { setSearch(''); setFilterCityId(''); setFilterAreaId(''); setFilterType(''); }}
             />
 
-            <DataTable columns={cols} data={chemists} loading={loading} emptyMessage="No such Chemist found" />
+            <DataTable columns={COLUMNS} data={chemists} loading={loading} emptyMessage="No such Chemist found" />
 
             {isManager && (
                 <ChemistFormModal

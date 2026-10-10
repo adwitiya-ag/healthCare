@@ -30,6 +30,7 @@ import MRDashboard from './pages/mr/MRDashboard';
 import LogVisit from './pages/visits/LogVisit';
 import UploadTourPlan from './pages/mr/UploadTourPlan';
 import MyDoctors from './pages/mr/MyDoctors';
+import MyChemists from './pages/mr/MyChemists'
 import RecordProduct from './pages/mr/RecordProduct';
 import DoctorPreference from './pages/doctorPreference/DoctorPreference';
 import LocationToggle from './pages/tracking/LocationToggle';
@@ -108,6 +109,7 @@ export default function App() {
                         <Route path="log-visit" element={<LogVisit />} />
                         <Route path="tour-plan" element={<UploadTourPlan />} />
                         <Route path="doctors" element={<MyDoctors />} />
+                        <Route path="chemists" element={<MyChemists/>}/>
                         <Route path="record-product" element={<RecordProduct />} />
                         <Route path="distribution" element={<DistributionLog />} />
                         <Route path="preference" element={<DoctorPreference />} />

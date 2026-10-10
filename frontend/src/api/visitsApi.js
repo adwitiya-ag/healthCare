@@ -104,6 +104,7 @@ export const tourPlansApi = {
             const errorMessage = responseData.message || `Failed to fetch tour plans! Status: ${response.status}`;
             throw new Error(errorMessage);
         }
+        console.log(responseData.data)
         return responseData.data;
     },
 
