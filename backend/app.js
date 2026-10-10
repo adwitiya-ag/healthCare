@@ -18,7 +18,7 @@ app.use(express.static("public")) //Serving Static Files
 
 //import routes here
 import userRouter from "./src/routes/user.routes.js";
-
+ 
 import companyRouter from "./src/routes/company.routes.js";
 
 import productRouter from "./src/routes/product.routes.js";
@@ -41,7 +41,7 @@ import locationRouter from "./src/routes/Location.route.js"
 
 import visitProofRouter from "./src/routes/visitProof.route.js";
 
-import sampleDistributionRouter from "./src/routes/sampleDistribution.routes.js";
+import sampleDistributionRouter from "./src/routes/SampleDistribution.routes.js";
 
 import { errorHandler } from "./src/middleware/error.middleware.js";
 
