@@ -82,7 +82,7 @@ app.use("/api/v1/sample-distribution", sampleDistributionRouter);
 
 app.use(errorHandler);
 
-app.get("/health", (req, res) => {
+app.get("/api/health", (req, res) => {
     res.status(200).json({
         status: "ok",
         message: "Healthcare API is running"
