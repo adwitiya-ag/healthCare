@@ -20,12 +20,12 @@ const schema = z.object({
 });
 
 const COLUMNS = [
-    { key: 'dateGiven', label: 'Date', render: (v) => v ? new Date(v).toLocaleDateString() : '-' },
-    { key: 'doctorName', label: 'Doctor', render: (_, row) => row.doctorId?.doctorName || "-"},
-    { key: 'productName', label: 'Product', render: (_, row) => row.productId?.productName || "-"},
+    { key: 'date', label: 'Date', render: (v) => v ? new Date(v).toLocaleDateString() : '-' },
+    { key: 'doctorName', label: 'Doctor', render: (_, row) => row.doctorName || "-"},
+    { key: 'productName', label: 'Product', render: (_, row) => row.productName || "-"},
     { key: 'quantity', label: 'Quantity', render: (v) => <span className="font-semibold">{v}</span> },
     { key: 'mrName', label: 'MR/Manager', render: (_, row) =>
-        row.userId ? `${row.userId.firstName} ${row.userId.lastName}` : "-",},
+        row.id ? row.mrName : "-",},
     { key: 'actions', label: 'Actions', sortable: false },
 ];
 
@@ -46,6 +46,8 @@ export default function DistributionLog() {
             const result = await distributionApi.getAll({
                 mrId: user?._id
             });
+
+            console.log("Distribution result: ", result)
 
             setData(result);
         } finally {
@@ -73,7 +75,8 @@ export default function DistributionLog() {
 
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this distribution record?')) return;
-        const response = await distributionApi.deleteRecord({id});
+        console.log("Delete id: ", id)
+        const response = await distributionApi.deleteRecord(id);
         if(response.statusCode == 200){
             fetchRecords();
             toast.success("Record deleted successfully");
@@ -87,8 +90,8 @@ export default function DistributionLog() {
         ? {
             ...col, render: (_, row) => (
                 <button
-                    id={`delete-distribution-${row._id}`}
-                    onClick={() => handleDelete(row._id)}
+                    id={`delete-distribution-${row.id}`}
+                    onClick={() => handleDelete(row.id)}
                     className="btn-sm btn-secondary text-danger"
                 >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -180,7 +183,7 @@ function DistributionFormModal({ isOpen, onClose, onSaved, user }) {
                     <label className="form-label">Product *</label>
                     <select id="dist-product" {...register('productId')} className={errors.productId ? 'form-input-error form-select' : 'form-select'}>
                         <option value="">Select product…</option>
-                        {products.filter(p => p.active !== false).map(p => <option key={p._id} value={p._id}>{p.productName}</option>)}
+                        {products.filter(p => p.active !== false).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                     </select>
                     {errors.productId && <p className="form-error">⚠ {errors.productId.message}</p>}
                 </div>

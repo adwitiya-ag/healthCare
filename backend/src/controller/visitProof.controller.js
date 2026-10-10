@@ -96,12 +96,63 @@ const getAllVisitProof = asyncHandler(async (req, res) => {
 
     // Manager can see all visit proofs
     else if (req.user.role === "MANAGER") {
-        visitProofs = await VisitProof
-            .find()
-            .sort({ createdAt: -1 })
-            .populate("MRId", "firstName lastName _id regNo employeeId")
-            .populate("DoctorId")
-            .populate("ChemistId")
+        visitProofs = await VisitProof.aggregate([
+            {
+                $lookup: {
+                    from: "users",
+                    localField: "MRId",
+                    foreignField: "_id",
+                    as: "mr"
+                }
+            },
+            {
+                $unwind: "$mr"
+            },
+            {
+                $match: {
+                    "mr.manager": new mongoose.Types.ObjectId(req.user._id)
+                }
+            },
+            {
+                $sort: {
+                    createdAt: -1
+                }
+            },
+            {
+                $lookup: {
+                    from: "doctors",
+                    localField: "DoctorId",
+                    foreignField: "_id",
+                    as: "DoctorId"
+                }
+            },
+            {
+                $lookup: {
+                    from: "chemists",
+                    localField: "ChemistId",
+                    foreignField: "_id",
+                    as: "ChemistId"
+                }
+            },
+            {
+                $project: {
+                    MRId: {
+                        _id: "$mr._id",
+                        firstName: "$mr.firstName",
+                        lastName: "$mr.lastName",
+                        regNo: "$mr.regNo",
+                        employeeId: "$mr.employeeId"
+                    },
+                    DoctorId: 1,
+                    ChemistId: 1,
+                    Photos: 1,
+                    Location: 1,
+                    Notes: 1,
+                    createdAt: 1,
+                    updatedAt: 1
+                }
+            }
+        ]);
             
     }
 

@@ -1,7 +1,15 @@
 import multer from "multer";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-const tempDir = "./public/temp";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const tempDir = process.env.ENVIRONMENT === "production"
+    ? "/tmp"
+    : path.join(__dirname, "../../public/temp");
 
 if (!fs.existsSync(tempDir)) {
     fs.mkdirSync(tempDir, { recursive: true });
@@ -9,7 +17,7 @@ if (!fs.existsSync(tempDir)) {
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, "./public/temp");
+        cb(null, tempDir);
     },
 
     filename: function (req, file, cb) {

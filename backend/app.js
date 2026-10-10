@@ -23,15 +23,15 @@ import companyRouter from "./src/routes/company.routes.js";
 
 import productRouter from "./src/routes/product.routes.js";
 
-import cityRouter from "./src/routes/city.routes.js";
+import cityRouter from "./src/routes/City.routes.js";
 
-import areaRouter from "./src/routes/area.routes.js";
+import areaRouter from "./src/routes/Area.routes.js";
 
 import masterDataRouter from "./src/routes/Masterdata.routes.js";
 
-import doctorRouter from "./src/routes/doctor.routes.js";
+import doctorRouter from "./src/routes/Doctor.routes.js";
 
-import chemistRouter from "./src/routes/chemist.routes.js";
+import chemistRouter from "./src/routes/Chemist.routes.js";
 
 import tourPlanRouter from "./src/routes/Tourplan.routes.js";
 
@@ -82,4 +82,11 @@ app.use("/api/v1/sample-distribution", sampleDistributionRouter);
 
 app.use(errorHandler);
 
-export {app}; //Exporting App so it can be used in another file
+app.get("/api/health", (req, res) => {
+    res.status(200).json({
+        status: "ok",
+        message: "Healthcare API is running"
+    });
+});
+
+export default app; //Exporting App so it can be used in another file

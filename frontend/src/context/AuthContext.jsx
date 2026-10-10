@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
         user,
         role: user?.role || null,
         isAuthenticated: !!user,
-        isManager: user?.role === 'manager',
+        isManager: user?.role === 'MANAGER',
         isMR: user?.role === 'mr',
         loading,
         login,

@@ -30,6 +30,7 @@ export const productsApi = {
           (p.companyName || '').toLowerCase().includes(q)
       );
     }
+    console.log('productsApi.getAll', result);
     return result;
   },
 
